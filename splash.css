@@ -1,0 +1,72 @@
+/* splash.css */
+
+:root {
+    --cor-primaria: #004d22;
+    --cor-fundo: #f4f7f6;
+    --cor-texto-principal: #1c1c1c;
+}
+
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--cor-fundo);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+    opacity: 1;
+    visibility: visible;
+}
+
+#splash-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.splash-content {
+    text-align: center;
+    animation: fadeInSplash 1.5s ease-in-out;
+}
+
+.splash-logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.splash-text h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--cor-primaria);
+    margin: 0;
+}
+
+.splash-text p {
+    font-size: 1rem;
+    color: var(--cor-texto-principal);
+    margin: 4px 0 0;
+}
+
+@keyframes fadeInSplash {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Adaptação para tema escuro */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --cor-primaria: #2e7d32;
+        --cor-fundo: #121212;
+        --cor-texto-principal: #e0e0e0;
+    }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LivIA - Assistente Virtual</title>
+    
+    <link rel="icon" href="assets/perfil.png" type="image/png">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="splash.css">
+    <link href=https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="splash-logo">
+            <div class="splash-text">
+                <h1><b>LivIA</b></h1>
+                <p>Assistente Virtual do Campus Itapetinga</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <header class="app-bar">
+            <div class="header-left">
+                <img src="assets/perfil.png" alt="Avatar LivIA" class="header-avatar">
+                <div class="header-text">
+                    <h1><b>LivIA</b></h1>
+                    <p class="subtitle">Assistente Virtual do Campus Itapetinga</p>
+                </div>
+            </div>
+            <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="logo">
+        </header>
+        
+        <main id="chat-display" class="chat-display"></main>
+        
+        <footer class="input-row">
+            <input type="text" id="pergunta-input" placeholder="Faça sua pergunta..." disabled>
+            <button id="btn-perguntar" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
