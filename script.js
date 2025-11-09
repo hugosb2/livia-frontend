@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Carregado - Iniciando aplicação...');
 
     // ===================================================================
     // 1. CONSTANTES E SELEÇÃO DE ELEMENTOS
@@ -14,10 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const REGEX_SIAPE = /^\d{7}$/; 
     const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/; 
 
+    // Elementos principais
     const splashScreen = document.getElementById('splash-screen');
     const authContainer = document.getElementById('auth-container');
     const appLayout = document.getElementById('app-layout'); 
 
+    // Elementos de autenticação
     const loginFormContainer = document.getElementById('login-form-container');
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email');
@@ -35,16 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnNext2 = document.getElementById('btn-next-2');
     const btnPrev3 = document.getElementById('btn-prev-3');
 
+    // Elementos do modal
     const modalOverlay = document.getElementById('modal-overlay');
     const modalCard = document.getElementById('modal-card');
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
     const modalCloseBtn = document.getElementById('modal-close-btn');
 
+    // Elementos do chat
     const chatDisplay = document.getElementById('chat-display');
     const perguntaInput = document.getElementById('pergunta-input');
     const btnPerguntar = document.getElementById('btn-perguntar');
     const btnLogout = document.getElementById('btn-logout');
+    const btnProfile = document.getElementById('btn-profile');
 
     const historyList = document.getElementById('history-list');
     const btnNewChat = document.getElementById('btn-new-chat');
@@ -59,6 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileDisplayName = document.getElementById('profile-display-name');
     const profileDisplayEmail = document.getElementById('profile-display-email');
     const profileDisplayUsername = document.getElementById('profile-display-username');
+
+    // Elementos do menu móvel
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
+    const mobileNewChat = document.getElementById('mobile-new-chat');
+    const mobileHistoryList = document.getElementById('mobile-history-list');
 
     const toggleLoginPass = document.getElementById('toggle-login-pass');
     const toggleRegPass = document.getElementById('toggle-reg-pass');
@@ -75,11 +89,44 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRegisterStep = 1;
     let isSuccessModal = false;
 
+    // Elementos do modal de edição
+    let editProfileModal, editProfileForm, editProfileCloseBtn;
+    let changePasswordModal, changePasswordForm, changePasswordCloseBtn;
+    let deleteAccountModal, deleteAccountForm, deleteAccountCloseBtn;
+
     // ===================================================================
-    // 2. LÓGICA DO MODAL (Mensagem)
+    // 2. VERIFICAÇÃO DE ELEMENTOS CRÍTICOS
+    // ===================================================================
+
+    function checkCriticalElements() {
+        const criticalElements = {
+            splashScreen,
+            authContainer,
+            appLayout,
+            loginFormContainer,
+            registerFormContainer,
+            btnProfile
+        };
+
+        for (const [name, element] of Object.entries(criticalElements)) {
+            if (!element) {
+                console.error(`Elemento crítico não encontrado: ${name}`);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ===================================================================
+    // 3. LÓGICA DO MODAL (Mensagem)
     // ===================================================================
 
     function showModal(title, message, isSuccess = true) {
+        if (!modalOverlay || !modalTitle || !modalMessage) {
+            console.error('Elementos do modal não encontrados');
+            return;
+        }
+
         modalTitle.textContent = title;
         modalMessage.textContent = message;
         isSuccessModal = isSuccess; 
@@ -96,20 +143,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hideModal() {
-        modalOverlay.classList.remove('visible');
-        if (isSuccessModal) {
+        if (modalOverlay) {
+            modalOverlay.classList.remove('visible');
+        }
+        if (isSuccessModal && showLoginLink) {
             showLoginLink.click();
             isSuccessModal = false; 
         }
     }
 
-    modalCloseBtn.addEventListener('click', hideModal);
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) hideModal();
-    });
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', hideModal);
+    }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) hideModal();
+        });
+    }
 
     // ===================================================================
-    // 3. LÓGICA DE AUTENTICAÇÃO (Backend) - CORRIGIDA
+    // 4. LÓGICA DE AUTENTICAÇÃO (Backend)
     // ===================================================================
 
     // --- Helpers de Armazenamento Local ---
@@ -131,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('livia_user');
     }
 
-    // --- Função Central de API Fetch (CORRIGIDA) ---
+    // --- Função Central de API Fetch ---
     async function apiFetch(endpoint, options = {}) {
         const token = getToken();
         
@@ -149,16 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log(`DEBUG: Resposta recebida - Status: ${response.status} para ${endpoint}`);
             
-            // *** CORREÇÃO: Só tratar 401 como sessão expirada se NÃO for rota de auth ***
             const isAuthRoute = (endpoint === '/login' || endpoint === '/register' || endpoint === '/validate-user');
             
             if (response.status === 401) {
                 if (isAuthRoute) {
-                    // Para rotas de auth, 401 significa credenciais inválidas - retornar normalmente
                     console.log('DEBUG: 401 em rota de auth - credenciais inválidas');
                     return response;
                 } else if (getToken()) {
-                    // Para outras rotas com token, 401 significa sessão expirada
                     console.log('DEBUG: 401 em rota protegida - sessão expirada');
                     handleLogout();
                     showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
@@ -169,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return response;
         } catch (error) {
             console.error('Fetch Error:', error);
-            // Só mostrar modal de rede se não for um erro de sessão expirada
             if (error.message !== 'Sessão expirada.') {
                 showModal('Erro de Rede', 'Não foi possível conectar ao servidor. Verifique sua internet.', false);
             }
@@ -179,62 +228,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lógica do "Olhinho" de Senha ---
     function togglePasswordVisibility(input, icon) {
+        if (!input || !icon) return;
+        
         const isPassword = input.type === 'password';
         input.type = isPassword ? 'text' : 'password';
-        icon.querySelector('path').setAttribute('d', isPassword ? eyeOffIconPath : eyeIconPath);
+        const pathElement = icon.querySelector('path');
+        if (pathElement) {
+            pathElement.setAttribute('d', isPassword ? eyeOffIconPath : eyeIconPath);
+        }
     }
     
-    toggleLoginPass.addEventListener('click', () => togglePasswordVisibility(loginPasswordInput, toggleLoginPass));
-    toggleRegPass.addEventListener('click', () => togglePasswordVisibility(regPassInput, toggleRegPass));
-    toggleRegConfirm.addEventListener('click', () => togglePasswordVisibility(regConfirmInput, toggleRegConfirm));
+    if (toggleLoginPass && loginPasswordInput) {
+        toggleLoginPass.addEventListener('click', () => togglePasswordVisibility(loginPasswordInput, toggleLoginPass));
+    }
+    if (toggleRegPass && regPassInput) {
+        toggleRegPass.addEventListener('click', () => togglePasswordVisibility(regPassInput, toggleRegPass));
+    }
+    if (toggleRegConfirm && regConfirmInput) {
+        toggleRegConfirm.addEventListener('click', () => togglePasswordVisibility(regConfirmInput, toggleRegConfirm));
+    }
 
     // --- Alternar entre formulários ---
-    showRegisterLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginFormContainer.style.display = 'none';
-        registerFormContainer.style.display = 'block';
-        currentRegisterStep = 1; 
-        showRegisterStep(currentRegisterStep);
-    });
+    if (showRegisterLink && loginFormContainer && registerFormContainer) {
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginFormContainer.style.display = 'none';
+            registerFormContainer.style.display = 'block';
+            currentRegisterStep = 1; 
+            showRegisterStep(currentRegisterStep);
+        });
+    }
 
-    showLoginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        registerFormContainer.style.display = 'none';
-        loginFormContainer.style.display = 'block';
-    });
+    if (showLoginLink && loginFormContainer && registerFormContainer) {
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerFormContainer.style.display = 'none';
+            loginFormContainer.style.display = 'block';
+        });
+    }
 
-    // --- Lógica de Login (Chama nosso Backend) ---
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        loginError.style.display = 'none';
-        const email = loginEmailInput.value;
-        const password = loginPasswordInput.value;
-
-        try {
-            const response = await apiFetch('/login', {
-                method: 'POST',
-                body: JSON.stringify({ email, password })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                // Agora, o 401 (Credenciais Inválidas) será tratado aqui
-                throw new Error(data.message || 'Erro desconhecido');
+    // --- Lógica de Login ---
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (loginError) {
+                loginError.style.display = 'none';
             }
-            
-            storeToken(data.access_token);
-            storeUser(data.user);
-            
-            initApp();
-        } catch (error) {
-            // Ignora erros de rede/sessão que o apiFetch já tratou
-            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
-                loginError.textContent = `Erro: ${error.message}`;
-                loginError.style.display = 'block';
+            const email = loginEmailInput ? loginEmailInput.value : '';
+            const password = loginPasswordInput ? loginPasswordInput.value : '';
+
+            try {
+                const response = await apiFetch('/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+                
+                storeToken(data.access_token);
+                storeUser(data.user);
+                
+                initApp();
+            } catch (error) {
+                if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.' && loginError) {
+                    loginError.textContent = `Erro: ${error.message}`;
+                    loginError.style.display = 'block';
+                }
             }
-        }
-    });
+        });
+    }
 
     // --- Lógica de Navegação das Etapas ---
     function showRegisterStep(stepNum) {
@@ -246,128 +312,141 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateFields(fieldIds) {
         for (const id of fieldIds) {
             const field = document.getElementById(id);
-            if (!field.value.trim()) {
-                showModal('Campo Obrigatório', `Por favor, preencha o campo "${field.labels[0].textContent}".`, false);
+            if (!field || !field.value.trim()) {
+                const fieldName = field ? field.labels[0]?.textContent : id;
+                showModal('Campo Obrigatório', `Por favor, preencha o campo "${fieldName}".`, false);
                 return false;
             }
         }
         return true;
     }
 
-    btnNext1.addEventListener('click', () => {
-        if (validateFields(['reg-first-name', 'reg-last-name', 'reg-email'])) {
+    if (btnNext1) {
+        btnNext1.addEventListener('click', () => {
+            if (validateFields(['reg-first-name', 'reg-last-name', 'reg-email'])) {
+                currentRegisterStep = 2;
+                showRegisterStep(currentRegisterStep);
+            }
+        });
+    }
+
+    if (btnPrev2) {
+        btnPrev2.addEventListener('click', () => {
+            currentRegisterStep = 1;
+            showRegisterStep(currentRegisterStep);
+        });
+    }
+
+    if (btnNext2) {
+        btnNext2.addEventListener('click', async () => {
+            if (!validateFields(['reg-user-type', 'reg-username'])) return;
+
+            const userType = document.getElementById('reg-user-type')?.value;
+            const username = document.getElementById('reg-username')?.value.trim();
+            
+            if (userType === 'aluno' && !REGEX_MATRICULA.test(username)) {
+                showModal('Formato Inválido', 'A matrícula de aluno parece estar em um formato incorreto. Ex: 20241ITA01GB0014', false);
+                return;
+            }
+            if (userType === 'servidor' && !REGEX_SIAPE.test(username)) {
+                showModal('Formato Inválido', 'O SIAPE deve conter 7 números. Ex: 2887499', false);
+                return;
+            }
+
+            btnNext2.disabled = true;
+            btnNext2.textContent = 'Verificando...';
+
+            try {
+                const response = await apiFetch('/validate-user', {
+                    method: 'POST',
+                    body: JSON.stringify({ username: username, user_type: userType })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                currentRegisterStep = 3;
+                showRegisterStep(currentRegisterStep);
+
+            } catch (error) {
+                if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                    showModal('Validação Falhou', error.message, false);
+                }
+            } finally {
+                btnNext2.disabled = false;
+                btnNext2.textContent = 'Próximo';
+            }
+        });
+    }
+
+    if (btnPrev3) {
+        btnPrev3.addEventListener('click', () => {
             currentRegisterStep = 2;
             showRegisterStep(currentRegisterStep);
-        }
-    });
+        });
+    }
 
-    btnPrev2.addEventListener('click', () => {
-        currentRegisterStep = 1;
-        showRegisterStep(currentRegisterStep);
-    });
-
-    // --- Etapa 2 -> Etapa 3 (com Validação) ---
-    btnNext2.addEventListener('click', async () => {
-        if (!validateFields(['reg-user-type', 'reg-username'])) return;
-
-        const userType = document.getElementById('reg-user-type').value;
-        const username = document.getElementById('reg-username').value.trim();
-        
-        if (userType === 'aluno' && !REGEX_MATRICULA.test(username)) {
-            showModal('Formato Inválido', 'A matrícula de aluno parece estar em um formato incorreto. Ex: 20241ITA01GB0014', false);
-            return;
-        }
-        if (userType === 'servidor' && !REGEX_SIAPE.test(username)) {
-            showModal('Formato Inválido', 'O SIAPE deve conter 7 números. Ex: 2887499', false);
-            return;
-        }
-
-        btnNext2.disabled = true;
-        btnNext2.textContent = 'Verificando...';
-
-        try {
-            const response = await apiFetch('/validate-user', {
-                method: 'POST',
-                body: JSON.stringify({ username: username, user_type: userType })
-            });
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message);
-            }
-
-            currentRegisterStep = 3;
-            showRegisterStep(currentRegisterStep);
-
-        } catch (error) {
-            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
-                showModal('Validação Falhou', error.message, false);
-            }
-        } finally {
-            btnNext2.disabled = false;
-            btnNext2.textContent = 'Próximo';
-        }
-    });
-
-    btnPrev3.addEventListener('click', () => {
-        currentRegisterStep = 2;
-        showRegisterStep(currentRegisterStep);
-    });
-
-    // --- Lógica de Cadastro (Chama nosso Backend) ---
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (!validateFields(['reg-password', 'reg-password-confirm'])) return;
-
-        const password = regPassInput.value;
-        const passwordConfirm = regConfirmInput.value;
-
-        if (password !== passwordConfirm) {
-            showModal('Erro na Senha', 'As senhas não conferem. Por favor, tente novamente.', false);
-            return;
-        }
-
-        const userData = {
-            first_name: document.getElementById('reg-first-name').value,
-            last_name: document.getElementById('reg-last-name').value,
-            email: document.getElementById('reg-email').value,
-            user_type: document.getElementById('reg-user-type').value,
-            username: document.getElementById('reg-username').value,
-            password: password,
-        };
-
-        try {
-            const response = await apiFetch('/register', {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Erro desconhecido');
+    // --- Lógica de Cadastro ---
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            showModal('Cadastro Realizado!', data.message + ' Você já pode fazer login.', true);
-            registerForm.reset(); 
-            
-        } catch (error) {
-            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
-                showModal('Erro no Cadastro', error.message, false);
+            if (!validateFields(['reg-password', 'reg-password-confirm'])) return;
+
+            const password = regPassInput ? regPassInput.value : '';
+            const passwordConfirm = regConfirmInput ? regConfirmInput.value : '';
+
+            if (password !== passwordConfirm) {
+                showModal('Erro na Senha', 'As senhas não conferem. Por favor, tente novamente.', false);
+                return;
             }
-        }
-    });
+
+            const userData = {
+                first_name: document.getElementById('reg-first-name')?.value || '',
+                last_name: document.getElementById('reg-last-name')?.value || '',
+                email: document.getElementById('reg-email')?.value || '',
+                user_type: document.getElementById('reg-user-type')?.value || '',
+                username: document.getElementById('reg-username')?.value || '',
+                password: password,
+            };
+
+            try {
+                const response = await apiFetch('/register', {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Erro desconhecido');
+                
+                showModal('Cadastro Realizado!', data.message + ' Você já pode fazer login.', true);
+                if (registerForm) registerForm.reset(); 
+                
+            } catch (error) {
+                if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                    showModal('Erro no Cadastro', error.message, false);
+                }
+            }
+        });
+    }
 
     // --- Lógica de Logout ---
     const handleLogout = () => {
         clearAuthData();
-        chatDisplay.innerHTML = '';
+        if (chatDisplay) chatDisplay.innerHTML = '';
         conversationHistory = [];
         conversations = [];
         currentConversationId = null;
         initApp();
     };
-    btnLogout.addEventListener('click', handleLogout); 
 
-        // ===================================================================
-    // 4. LÓGICA DE HISTÓRICO DE CONVERSAS (Backend) - CONTINUAÇÃO
+    if (btnLogout) {
+        btnLogout.addEventListener('click', handleLogout);
+    }
+
+    // ===================================================================
+    // 5. LÓGICA DE HISTÓRICO DE CONVERSAS
     // ===================================================================
 
     async function loadConversations() {
@@ -376,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Falha ao carregar histórico');
             conversations = await response.json();
             renderHistoryList();
+            renderMobileHistoryList();
             
             if (!currentConversationId && conversations.length > 0) {
                 selectConversation(conversations[0].id);
@@ -384,13 +464,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
-                console.error(error);
-                showModal('Erro de Rede', error.message, false);
+                console.error('Erro ao carregar conversas:', error);
             }
         }
     }
 
     function renderHistoryList() {
+        if (!historyList) return;
+        
         historyList.innerHTML = '';
         if (conversations.length === 0) {
             historyList.innerHTML = '<p class="history-empty">Nenhuma conversa iniciada.</p>';
@@ -412,18 +493,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 </span>
             `;
             
-            item.querySelector('.history-item-title').addEventListener('click', (e) => {
-                e.preventDefault();
-                selectConversation(convo.id);
-            });
+            const titleElement = item.querySelector('.history-item-title');
+            if (titleElement) {
+                titleElement.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectConversation(convo.id);
+                });
+            }
 
-            item.querySelector('.history-item-btn.delete').addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                await deleteConversation(convo.id);
-            });
+            const deleteBtn = item.querySelector('.history-item-btn.delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await deleteConversation(convo.id);
+                });
+            }
 
             historyList.appendChild(item);
+        });
+    }
+
+    function renderMobileHistoryList() {
+        if (!mobileHistoryList) return;
+        
+        mobileHistoryList.innerHTML = '';
+        if (conversations.length === 0) {
+            mobileHistoryList.innerHTML = '<p class="history-empty">Nenhuma conversa iniciada.</p>';
+            return;
+        }
+
+        conversations.forEach(convo => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = `history-item ${convo.id === currentConversationId ? 'active' : ''}`;
+            item.dataset.id = convo.id;
+            
+            item.innerHTML = `
+                <span class="history-item-title">${convo.title}</span>
+                <span class="history-item-actions">
+                    <button class="history-item-btn delete" title="Apagar conversa">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+                    </button>
+                </span>
+            `;
+            
+            const titleElement = item.querySelector('.history-item-title');
+            if (titleElement) {
+                titleElement.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectConversation(convo.id);
+                    hideMobileMenu();
+                });
+            }
+
+            const deleteBtn = item.querySelector('.history-item-btn.delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await deleteConversation(convo.id);
+                });
+            }
+
+            mobileHistoryList.appendChild(item);
         });
     }
 
@@ -434,6 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChatMessages(); 
         chatController.initChat(); 
         renderHistoryList(); 
+        renderMobileHistoryList();
+        hideMobileMenu();
     }
 
     function selectConversation(convId) {
@@ -448,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChatMessages();
         chatView.setInputState(true);
         renderHistoryList(); 
+        renderMobileHistoryList();
     }
 
     async function deleteConversation(convId) {
@@ -463,11 +599,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 startNewChat();
             } else {
                 renderHistoryList();
+                renderMobileHistoryList();
             }
         } catch (error) {
             if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
-                console.error(error);
-                showModal('Erro de Rede', error.message, false);
+                console.error('Erro ao deletar conversa:', error);
+                showModal('Erro', 'Não foi possível apagar a conversa.', false);
             }
         }
     }
@@ -509,12 +646,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
                 console.error('Erro ao salvar conversa:', error);
-                showModal('Erro', 'Não foi possível salvar seu histórico.', false);
             }
         }
     }
 
     function renderChatMessages() {
+        if (!chatDisplay) return;
+        
         chatDisplay.innerHTML = '';
         conversationHistory.forEach(message => {
             chatView.addMessage(message.content, message.role, false); 
@@ -522,14 +660,55 @@ document.addEventListener('DOMContentLoaded', () => {
         chatView.scrollToBottom();
     }
 
-    btnNewChat.addEventListener('click', startNewChat);
+    if (btnNewChat) {
+        btnNewChat.addEventListener('click', startNewChat);
+    }
 
     // ===================================================================
-    // 5. LÓGICA DO CHATBOT (Chatbase)
+    // 6. LÓGICA DO MENU MÓVEL
+    // ===================================================================
+
+    function showMobileMenu() {
+        if (mobileSidebar && mobileMenuOverlay) {
+            mobileSidebar.classList.add('visible');
+            mobileMenuOverlay.classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function hideMobileMenu() {
+        if (mobileSidebar && mobileMenuOverlay) {
+            mobileSidebar.classList.remove('visible');
+            mobileMenuOverlay.classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Event listeners para o menu móvel
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', showMobileMenu);
+    }
+
+    if (mobileSidebarClose) {
+        mobileSidebarClose.addEventListener('click', hideMobileMenu);
+    }
+
+    if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', hideMobileMenu);
+    }
+
+    if (mobileNewChat) {
+        mobileNewChat.addEventListener('click', startNewChat);
+    }
+
+    // ===================================================================
+    // 7. LÓGICA DO CHATBOT (Chatbase)
     // ===================================================================
 
     const chatView = {
         addMessage: (text, sender, animate = true) => {
+            if (!chatDisplay) return;
+            
             const messageElement = document.createElement('div');
             messageElement.classList.add('chat-message');
             if (!animate) messageElement.style.animation = 'none'; 
@@ -538,7 +717,14 @@ document.addEventListener('DOMContentLoaded', () => {
             avatar.classList.add('avatar');
             const bubble = document.createElement('div');
             bubble.classList.add('message-bubble');
-            bubble.innerHTML = marked.parse(text);
+            
+            // Usar marked.parse se disponível, caso contrário usar texto simples
+            try {
+                bubble.innerHTML = window.marked ? window.marked.parse(text) : text;
+            } catch (error) {
+                bubble.innerHTML = text;
+            }
+            
             if (sender === 'user') {
                 messageElement.classList.add('user-message');
                 messageElement.appendChild(bubble);
@@ -552,6 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chatView.scrollToBottom();
         },
         showTypingIndicator: () => {
+            if (!chatDisplay) return;
+            
             const typingElement = document.createElement('div');
             typingElement.id = 'typing-indicator';
             typingElement.classList.add('chat-message', 'livia-message');
@@ -564,12 +752,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (indicator) indicator.remove();
         },
         setInputState: (enabled) => {
-            perguntaInput.disabled = !enabled;
-            btnPerguntar.disabled = !enabled;
-            if (enabled) perguntaInput.focus();
+            if (perguntaInput) perguntaInput.disabled = !enabled;
+            if (btnPerguntar) btnPerguntar.disabled = !enabled;
+            if (enabled && perguntaInput) {
+                perguntaInput.focus();
+            }
         },
         scrollToBottom: () => {
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            if (chatDisplay) {
+                setTimeout(() => {
+                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                }, 100);
+            }
         }
     };
 
@@ -597,11 +791,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const chatController = {
         handleSendMessage: async () => {
-            const question = perguntaInput.value.trim();
+            const question = perguntaInput ? perguntaInput.value.trim() : '';
             if (!question) return;
 
             chatView.addMessage(question, 'user');
-            perguntaInput.value = '';
+            if (perguntaInput) perguntaInput.value = '';
             chatView.setInputState(false);
             chatView.showTypingIndicator();
             
@@ -634,22 +828,154 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    btnPerguntar.addEventListener('click', chatController.handleSendMessage);
-    perguntaInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            chatController.handleSendMessage();
+    if (btnPerguntar) {
+        btnPerguntar.addEventListener('click', chatController.handleSendMessage);
+    }
+    if (perguntaInput) {
+        perguntaInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatController.handleSendMessage();
+            }
+        });
+    }
+
+    // ===================================================================
+    // 8. GERENCIAMENTO DA TELA DE PERFIL INTEGRADA - CORRIGIDO
+    // ===================================================================
+
+    function showProfileScreen() {
+        console.log('Abrindo tela de perfil...');
+        
+        const user = getStoredUser();
+        if (user) {
+            if (profileDisplayName) {
+                profileDisplayName.textContent = `${user.first_name} ${user.last_name}`;
+            }
+            if (profileDisplayEmail) {
+                profileDisplayEmail.textContent = user.email;
+            }
+            if (profileDisplayUsername) {
+                profileDisplayUsername.textContent = `Matrícula/SIAPE: ${user.username}`;
+            }
+        } else {
+            console.warn('Usuário não encontrado no localStorage');
         }
-    });
+        
+        // Esconder o chat e mostrar o perfil
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+            chatContainer.style.display = 'none';
+        }
+        
+        if (profileScreen) {
+            profileScreen.style.display = 'flex';
+            // Garantir que o perfil ocupe toda a tela
+            profileScreen.style.position = 'fixed';
+            profileScreen.style.top = '0';
+            profileScreen.style.left = '0';
+            profileScreen.style.width = '100vw';
+            profileScreen.style.height = '100vh';
+            profileScreen.style.zIndex = '1000';
+        } else {
+            console.error('Elemento profile-screen não encontrado');
+        }
+        
+        // Esconder o app-layout completamente
+        if (appLayout) {
+            appLayout.style.display = 'none';
+        }
+    }
+
+    function hideProfileScreen() {
+        console.log('Fechando tela de perfil...');
+        
+        if (profileScreen) {
+            profileScreen.style.display = 'none';
+        }
+        
+        // Mostrar o chat novamente
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+            chatContainer.style.display = 'flex';
+        }
+        
+        // Mostrar o app-layout novamente
+        if (appLayout) {
+            appLayout.style.display = 'flex';
+        }
+    }
+
+    // Event Listeners para a tela de perfil - COM VERIFICAÇÕES
+    if (btnProfile) {
+        btnProfile.addEventListener('click', showProfileScreen);
+        console.log('Event listener do btnProfile adicionado');
+    } else {
+        console.error('btnProfile não encontrado no DOM');
+    }
+
+    if (profileBackBtn) {
+        profileBackBtn.addEventListener('click', hideProfileScreen);
+        console.log('Event listener do profileBackBtn adicionado');
+    } else {
+        console.error('profileBackBtn não encontrado no DOM');
+    }
+
+    if (profileLogoutBtn) {
+        profileLogoutBtn.addEventListener('click', handleLogout);
+        console.log('Event listener do profileLogoutBtn adicionado');
+    } else {
+        console.error('profileLogoutBtn não encontrado no DOM');
+    }
+
+    // Conectar os botões existentes - COM VERIFICAÇÕES
+    if (profileEditBtn) {
+        profileEditBtn.addEventListener('click', () => {
+            console.log('Botão editar perfil clicado');
+            hideProfileScreen();
+            setTimeout(() => {
+                loadProfileForEdit();
+            }, 300);
+        });
+    } else {
+        console.error('profileEditBtn não encontrado no DOM');
+    }
+    
+    if (profilePasswordBtn) {
+        profilePasswordBtn.addEventListener('click', () => {
+            console.log('Botão alterar senha clicado');
+            hideProfileScreen();
+            setTimeout(() => {
+                if (changePasswordModal) {
+                    showCustomModal(changePasswordModal);
+                } else {
+                    console.error('changePasswordModal não encontrado');
+                }
+            }, 300);
+        });
+    } else {
+        console.error('profilePasswordBtn não encontrado no DOM');
+    }
+    
+    if (profileDeleteBtn) {
+        profileDeleteBtn.addEventListener('click', () => {
+            console.log('Botão excluir conta clicado');
+            hideProfileScreen();
+            setTimeout(() => {
+                if (deleteAccountModal) {
+                    showCustomModal(deleteAccountModal);
+                } else {
+                    console.error('deleteAccountModal não encontrado');
+                }
+            }, 300);
+        });
+    } else {
+        console.error('profileDeleteBtn não encontrado no DOM');
+    }
 
     // ===================================================================
-    // 6. NOVAS FUNÇÕES PARA GERENCIAMENTO DE CONTA
+    // 9. NOVAS FUNÇÕES PARA GERENCIAMENTO DE CONTA
     // ===================================================================
-
-    // Elementos do modal de edição
-    let editProfileModal, editProfileForm, editProfileCloseBtn;
-    let changePasswordModal, changePasswordForm, changePasswordCloseBtn;
-    let deleteAccountModal, deleteAccountForm, deleteAccountCloseBtn;
 
     // Inicializar modais de gerenciamento de conta
     function initAccountModals() {
@@ -793,16 +1119,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showCustomModal(modalElement) {
-        modalElement.classList.add('visible');
+        if (modalElement) {
+            modalElement.classList.add('visible');
+        }
     }
 
     function hideCustomModal(modalElement) {
-        modalElement.classList.remove('visible');
-        // Limpar formulários
-        if (modalElement === changePasswordModal) {
-            changePasswordForm.reset();
-        } else if (modalElement === deleteAccountModal) {
-            deleteAccountForm.reset();
+        if (modalElement) {
+            modalElement.classList.remove('visible');
+            // Limpar formulários
+            if (modalElement === changePasswordModal) {
+                changePasswordForm.reset();
+            } else if (modalElement === deleteAccountModal) {
+                deleteAccountForm.reset();
+            }
         }
     }
 
@@ -965,77 +1295,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // 7. GERENCIAMENTO DA TELA DE PERFIL INTEGRADA
-    // ===================================================================
-
-    function showProfileScreen() {
-        const user = getStoredUser();
-        if (user) {
-            profileDisplayName.textContent = `${user.first_name} ${user.last_name}`;
-            profileDisplayEmail.textContent = user.email;
-            profileDisplayUsername.textContent = `Matrícula/SIAPE: ${user.username}`;
-        }
-        
-        // Esconde o chat e mostra o perfil
-        document.getElementById('chat-container').style.display = 'none';
-        profileScreen.style.display = 'flex';
-    }
-
-    function hideProfileScreen() {
-        profileScreen.style.display = 'none';
-        document.getElementById('chat-container').style.display = 'flex';
-    }
-
-    // Event Listeners para a tela de perfil
-    btnProfile.addEventListener('click', showProfileScreen);
-    profileBackBtn.addEventListener('click', hideProfileScreen);
-    profileLogoutBtn.addEventListener('click', handleLogout);
-
-    // Conectar os botões existentes
-    profileEditBtn.addEventListener('click', () => {
-        hideProfileScreen();
-        loadProfileForEdit();
-    });
-    
-    profilePasswordBtn.addEventListener('click', () => {
-        hideProfileScreen();
-        showCustomModal(changePasswordModal);
-    });
-    
-    profileDeleteBtn.addEventListener('click', () => {
-        hideProfileScreen();
-        showCustomModal(deleteAccountModal);
-    });
-
-    // ===================================================================
-    // 8. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
+    // 10. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
     // ===================================================================
 
     function initApp() {
+        console.log('Inicializando aplicação...');
+        
+        // Verificar elementos críticos
+        if (!checkCriticalElements()) {
+            console.error('Elementos críticos não encontrados. A aplicação pode não funcionar corretamente.');
+        }
+
         const token = getToken();
 
-        if (!token) {
-            splashScreen.classList.add('hidden');
-            appLayout.style.display = 'none'; 
-            authContainer.style.display = 'flex'; 
-            loginFormContainer.style.display = 'block';
-            registerFormContainer.style.display = 'none';
-        } else {
-            authContainer.style.display = 'none'; 
-            appLayout.style.display = 'flex'; 
-            
-            if (splashScreen) {
-                setTimeout(() => {
-                    splashScreen.classList.add('hidden');
-                }, 2500); 
+        // Sempre esconder a tela de splash após um tempo
+        setTimeout(() => {
+            if (splashScreen && !splashScreen.classList.contains('hidden')) {
+                splashScreen.classList.add('hidden');
+                console.log('Splash screen escondida');
             }
+        }, 2000);
+
+        if (!token) {
+            console.log('Usuário não logado - mostrando tela de autenticação');
+            if (appLayout) appLayout.style.display = 'none'; 
+            if (profileScreen) profileScreen.style.display = 'none';
+            if (authContainer) authContainer.style.display = 'flex'; 
+            if (loginFormContainer) loginFormContainer.style.display = 'block';
+            if (registerFormContainer) registerFormContainer.style.display = 'none';
+        } else {
+            console.log('Usuário logado - mostrando aplicação');
+            if (authContainer) authContainer.style.display = 'none'; 
+            if (profileScreen) profileScreen.style.display = 'none';
+            if (appLayout) appLayout.style.display = 'flex'; 
             
-            // Inicializar modais de conta
             initAccountModals();
             
-            loadConversations();
+            // Carregar conversas
+            loadConversations().catch(error => {
+                console.error('Erro ao carregar conversas:', error);
+            });
         }
     }
 
+    // ===================================================================
+    // 11. INICIALIZAÇÃO DA APLICAÇÃO
+    // ===================================================================
+
+    console.log('Iniciando aplicação LivIA...');
     initApp();
 });
