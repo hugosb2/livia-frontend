@@ -119,7 +119,7 @@ body {
     color: var(--cor-texto-principal);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
     min-height: -webkit-fill-available;
     overflow: auto;
@@ -414,9 +414,10 @@ body {
     left: 0;
     right: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 2000;
     box-sizing: border-box;
-    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     height: var(--app-bar-height);
     min-height: var(--app-bar-height);
 }
@@ -1772,6 +1773,8 @@ body {
         padding-left: calc(16px + env(safe-area-inset-left));
         padding-right: calc(16px + env(safe-area-inset-right));
         box-sizing: border-box;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
     }
 
     .chat-display {
