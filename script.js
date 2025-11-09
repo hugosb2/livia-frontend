@@ -7,12 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. CONSTANTES E SELEÇÃO DE ELEMENTOS
     // ===================================================================
 
-    // ATENÇÃO: Mude esta URL para a URL do seu backend no Vercel
-    const API_BASE_URL = 'https://livia-backend2.vercel.app'; 
+    // Variáveis de ambiente — obter de env-config.js (window.__ENV__)
+    // NÃO deixar chaves/URLs hardcoded no código.
+    const API_BASE_URL = (window.__ENV__ && window.__ENV__.API_BASE_URL) || '';
+    const CHATBASE_API_KEY = (window.__ENV__ && window.__ENV__.CHATBASE_API_KEY) || '';
+    const CHATBASE_CHATBOT_ID = (window.__ENV__ && window.__ENV__.CHATBASE_CHATBOT_ID) || '';
+    const CHATBASE_URL = (window.__ENV__ && window.__ENV__.CHATBASE_URL) || '';
 
-    const CHATBASE_API_KEY = '90e6f396-068b-4d57-98ec-a183ed62a668'; 
-    const CHATBASE_CHATBOT_ID = 'FPu7VxPsgVWNcXdEIDO8i';
-    const CHATBASE_URL = 'https://www.chatbase.co/api/v1/chat';
+    // Avisos quando variáveis essenciais não estiverem definidas
+    if (!API_BASE_URL) console.warn('ATENÇÃO: API_BASE_URL não definida. Gere `env-config.js` ou preencha `window.__ENV__`.');
+    if (!CHATBASE_API_KEY) console.warn('ATENÇÃO: CHATBASE_API_KEY não definida.');
+    if (!CHATBASE_CHATBOT_ID) console.warn('ATENÇÃO: CHATBASE_CHATBOT_ID não definida.');
+    if (!CHATBASE_URL) console.warn('ATENÇÃO: CHATBASE_URL não definida.');
 
     const REGEX_SIAPE = /^\d{7}$/; 
     const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/; 
