@@ -41,10 +41,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalMessage = document.getElementById('modal-message');
     const modalCloseBtn = document.getElementById('modal-close-btn');
 
-    const profileModal = document.getElementById('profile-modal');
-    const btnProfile = document.getElementById('btn-profile');
-    const profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
-    const profileBtnLogout = document.getElementById('profile-btn-logout');
+    const chatDisplay = document.getElementById('chat-display');
+    const perguntaInput = document.getElementById('pergunta-input');
+    const btnPerguntar = document.getElementById('btn-perguntar');
+    const btnLogout = document.getElementById('btn-logout');
+
+    const historyList = document.getElementById('history-list');
+    const btnNewChat = document.getElementById('btn-new-chat');
+
+    // Elementos da tela de perfil integrada
+    const profileScreen = document.getElementById('profile-screen');
+    const profileBackBtn = document.getElementById('profile-back-btn');
+    const profileEditBtn = document.getElementById('profile-edit-btn');
+    const profilePasswordBtn = document.getElementById('profile-password-btn');
+    const profileLogoutBtn = document.getElementById('profile-logout-btn');
+    const profileDeleteBtn = document.getElementById('profile-delete-btn');
+    const profileDisplayName = document.getElementById('profile-display-name');
+    const profileDisplayEmail = document.getElementById('profile-display-email');
+    const profileDisplayUsername = document.getElementById('profile-display-username');
 
     const toggleLoginPass = document.getElementById('toggle-login-pass');
     const toggleRegPass = document.getElementById('toggle-reg-pass');
@@ -55,14 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const eyeIconPath = "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
     const eyeOffIconPath = "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zM11.84 9.02l3.15 3.15c.02-.16.03-.33.03-.5 0-1.66-1.34-3-3-3-.17 0-.34.01-.5.03z";
 
-    const chatDisplay = document.getElementById('chat-display');
-    const perguntaInput = document.getElementById('pergunta-input');
-    const btnPerguntar = document.getElementById('btn-perguntar');
-    const btnLogout = document.getElementById('btn-logout');
-
-    const historyList = document.getElementById('history-list');
-    const btnNewChat = document.getElementById('btn-new-chat');
-
     let conversationHistory = []; 
     let currentConversationId = null; 
     let conversations = []; 
@@ -70,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSuccessModal = false;
 
     // ===================================================================
-    // 2. LÓGICA DO MODAL (Mensagem e Perfil)
+    // 2. LÓGICA DO MODAL (Mensagem)
     // ===================================================================
 
     function showModal(title, message, isSuccess = true) {
@@ -100,31 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modalCloseBtn.addEventListener('click', hideModal);
     modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) hideModal();
-    });
-
-    function showProfileModal() {
-        const user = getStoredUser();
-        if (user) {
-            document.getElementById('profile-name').textContent = `${user.first_name} ${user.last_name}`;
-            document.getElementById('profile-email').textContent = user.email;
-            document.getElementById('profile-username').textContent = `Matrícula/SIAPE: ${user.username}`;
-        }
-        profileModal.classList.add('visible');
-    }
-
-    function hideProfileModal() {
-        profileModal.classList.remove('visible');
-    }
-
-    btnProfile.addEventListener('click', showProfileModal);
-    profileModalCloseBtn.addEventListener('click', hideProfileModal);
-    profileModal.addEventListener('click', (e) => {
-        if (e.target === profileModal) hideProfileModal();
-    });
-
-    profileBtnLogout.addEventListener('click', () => {
-        hideProfileModal();
-        handleLogout();
     });
 
     // ===================================================================
@@ -385,8 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     btnLogout.addEventListener('click', handleLogout); 
 
-    // ===================================================================
-    // 4. LÓGICA DE HISTÓRICO DE CONVERSAS (Backend)
+        // ===================================================================
+    // 4. LÓGICA DE HISTÓRICO DE CONVERSAS (Backend) - CONTINUAÇÃO
     // ===================================================================
 
     async function loadConversations() {
@@ -676,24 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
         createEditProfileModal();
         createChangePasswordModal();
         createDeleteAccountModal();
-        
-        // Atualizar textos dos botões existentes
-        document.getElementById('profile-btn-edit').textContent = 'Editar Dados';
-        document.getElementById('profile-btn-delete').textContent = 'Excluir Conta';
-        
-        // Adicionar botão de alterar senha no modal de perfil
-        const profileActions = document.querySelector('.profile-actions');
-        const changePasswordBtn = document.createElement('button');
-        changePasswordBtn.id = 'profile-btn-change-password';
-        changePasswordBtn.className = 'auth-button secondary';
-        changePasswordBtn.textContent = 'Alterar Senha';
-        changePasswordBtn.addEventListener('click', () => {
-            hideProfileModal();
-            showCustomModal(changePasswordModal);
-        });
-        
-        // Inserir antes do botão de logout
-        profileActions.insertBefore(changePasswordBtn, profileBtnLogout);
     }
 
     function createEditProfileModal() {
@@ -903,9 +866,9 @@ document.addEventListener('DOMContentLoaded', () => {
             hideCustomModal(editProfileModal);
             showModal('Perfil Atualizado!', 'Seus dados foram atualizados com sucesso.', true);
             
-            // Atualizar modal de perfil se estiver aberto
-            if (profileModal.classList.contains('visible')) {
-                showProfileModal();
+            // Atualizar tela de perfil se estiver aberta
+            if (profileScreen.style.display === 'flex') {
+                showProfileScreen();
             }
             
         } catch (error) {
@@ -1001,19 +964,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Adicionar event listeners para os botões de gerenciamento de conta
-    document.getElementById('profile-btn-edit').addEventListener('click', () => {
-        hideProfileModal();
+    // ===================================================================
+    // 7. GERENCIAMENTO DA TELA DE PERFIL INTEGRADA
+    // ===================================================================
+
+    function showProfileScreen() {
+        const user = getStoredUser();
+        if (user) {
+            profileDisplayName.textContent = `${user.first_name} ${user.last_name}`;
+            profileDisplayEmail.textContent = user.email;
+            profileDisplayUsername.textContent = `Matrícula/SIAPE: ${user.username}`;
+        }
+        
+        // Esconde o chat e mostra o perfil
+        document.getElementById('chat-container').style.display = 'none';
+        profileScreen.style.display = 'flex';
+    }
+
+    function hideProfileScreen() {
+        profileScreen.style.display = 'none';
+        document.getElementById('chat-container').style.display = 'flex';
+    }
+
+    // Event Listeners para a tela de perfil
+    btnProfile.addEventListener('click', showProfileScreen);
+    profileBackBtn.addEventListener('click', hideProfileScreen);
+    profileLogoutBtn.addEventListener('click', handleLogout);
+
+    // Conectar os botões existentes
+    profileEditBtn.addEventListener('click', () => {
+        hideProfileScreen();
         loadProfileForEdit();
     });
     
-    document.getElementById('profile-btn-delete').addEventListener('click', () => {
-        hideProfileModal();
+    profilePasswordBtn.addEventListener('click', () => {
+        hideProfileScreen();
+        showCustomModal(changePasswordModal);
+    });
+    
+    profileDeleteBtn.addEventListener('click', () => {
+        hideProfileScreen();
         showCustomModal(deleteAccountModal);
     });
 
     // ===================================================================
-    // 7. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
+    // 8. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
     // ===================================================================
 
     function initApp() {

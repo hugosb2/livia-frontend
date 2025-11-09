@@ -41,12 +41,12 @@
     --cor-perigo-hover: #b91c1c;
     
     /* Sidebar */
-    --sidebar-fundo: #1a1a1a;
-    --sidebar-texto: #d1d5db;
-    --sidebar-texto-hover: #ffffff;
-    --sidebar-item-hover: #2d2d2d;
+    --sidebar-fundo: #ffffff;
+    --sidebar-texto: #374151;
+    --sidebar-texto-hover: #111827;
+    --sidebar-item-hover: #f3f4f6;
     --sidebar-item-active: var(--cor-primaria);
-    --sidebar-divider: rgba(255, 255, 255, 0.08);
+    --sidebar-divider: #e5e7eb;
     
     /* Transições */
     --transition-fast: 0.15s ease;
@@ -87,10 +87,11 @@
         --cor-input-borda: #404040;
         
         /* Sidebar */
-        --sidebar-fundo: #171717;
+        --sidebar-fundo: #1a1a1a;
         --sidebar-texto: #d1d5db;
-        --sidebar-item-hover: #262626;
-        --sidebar-divider: rgba(255, 255, 255, 0.06);
+        --sidebar-texto-hover: #ffffff;
+        --sidebar-item-hover: #2d2d2d;
+        --sidebar-divider: #404040;
     }
 }
 
@@ -142,6 +143,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    background-color: var(--sidebar-fundo);
 }
 
 .history-header .logo-container {
@@ -197,6 +199,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    background-color: var(--sidebar-fundo);
 }
 
 /* Scrollbar personalizada */
@@ -209,12 +212,12 @@ body {
 }
 
 .history-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--cor-texto-terciario);
     border-radius: 3px;
 }
 
 .history-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--cor-texto-secundario);
 }
 
 .history-empty {
@@ -307,7 +310,7 @@ body {
 }
 
 .history-item-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
     color: var(--sidebar-texto-hover);
 }
 
@@ -1123,7 +1126,165 @@ body {
 }
 
 /* =================================================================== */
-/* 10. RESPONSIVIDADE                                                  */
+/* 10. TELA DE PERFIL INTEGRADA                                        */
+/* =================================================================== */
+.profile-screen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--cor-fundo);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background-color: var(--cor-app-bar);
+    border-bottom: 1px solid var(--cor-input-borda);
+}
+
+.profile-back-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-full);
+    border: none;
+    background-color: var(--cor-input-fundo);
+    color: var(--cor-texto-secundario);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-normal);
+    flex-shrink: 0;
+}
+
+.profile-back-btn:hover {
+    background-color: var(--cor-secundaria);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.profile-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 32px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.profile-section {
+    background-color: var(--cor-app-bar);
+    border-radius: var(--radius-large);
+    padding: 32px;
+    box-shadow: 0 4px 16px var(--cor-sombra);
+    margin-bottom: 24px;
+}
+
+.profile-section h2 {
+    margin: 0 0 24px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--cor-texto-principal);
+    border-bottom: 2px solid var(--cor-primaria);
+    padding-bottom: 12px;
+}
+
+.profile-info-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    margin-bottom: 20px;
+    border: 4px solid var(--cor-primaria);
+    box-shadow: 0 4px 16px var(--cor-sombra-media);
+}
+
+.profile-info-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--cor-texto-principal);
+}
+
+.profile-info-card p {
+    margin: 4px 0;
+    color: var(--cor-texto-secundario);
+    font-size: 1rem;
+}
+
+.profile-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.profile-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 1px solid var(--cor-input-borda);
+    border-radius: var(--radius-medium);
+    background-color: var(--cor-app-bar);
+    color: var(--cor-texto-principal);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: left;
+}
+
+.profile-action-btn:hover {
+    border-color: var(--cor-primaria);
+    background-color: var(--cor-input-fundo);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--cor-sombra);
+}
+
+.profile-action-btn.danger:hover {
+    border-color: var(--cor-erro);
+    color: var(--cor-erro);
+}
+
+.profile-action-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+/* Formulários de edição no perfil */
+.profile-form {
+    margin-top: 24px;
+}
+
+.profile-form .form-group {
+    margin-bottom: 20px;
+}
+
+.profile-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.profile-form-actions .auth-button {
+    flex: 1;
+}
+
+/* =================================================================== */
+/* 11. RESPONSIVIDADE                                                  */
 /* =================================================================== */
 
 @media (max-width: 767px) {
@@ -1185,6 +1346,23 @@ body {
     
     .splash-text h1 {
         font-size: 2.2rem;
+    }
+    
+    .profile-content {
+        padding: 20px 16px;
+    }
+    
+    .profile-section {
+        padding: 24px 20px;
+    }
+    
+    .profile-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
     }
 }
 
@@ -1253,7 +1431,7 @@ body {
 }
 
 /* =================================================================== */
-/* 11. ANIMAÇÕES E TRANSIÇÕES EXTRAS                                  */
+/* 12. ANIMAÇÕES E TRANSIÇÕES EXTRAS                                  */
 /* =================================================================== */
 
 @keyframes fadeIn {
@@ -1321,7 +1499,7 @@ html {
 }
 
 /* =================================================================== */
-/* 12. UTILITÁRIOS                                                     */
+/* 13. UTILITÁRIOS                                                     */
 /* =================================================================== */
 
 .text-center {

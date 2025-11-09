@@ -171,28 +171,71 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="modal-overlay">
-        <div class="modal-card profile-modal-card">
-            <h2>Meu Perfil</h2>
-            <p>Aqui você pode gerenciar os dados da sua conta.</p>
-            
-            <div class="profile-info">
-                <img src="assets/perfil.png" alt="Avatar" class="profile-avatar-large">
-                <h3 id="profile-name">Nome do Usuário</h3>
-                <p id="profile-email">email@usuario.com</p>
-                <p id="profile-username">Matrícula/SIAPE: 000000</p>
+    <!-- Tela de Perfil Integrada -->
+    <div id="profile-screen" class="profile-screen">
+        <header class="profile-header">
+            <button id="profile-back-btn" class="profile-back-btn" title="Voltar ao Chat">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor">
+                    <path d="M400-280 240-440l160-160 56 56-64 64h328v80H392l64 64-56 56Z"/>
+                </svg>
+            </button>
+            <div class="header-text">
+                <h1>Meu Perfil</h1>
+                <p class="subtitle">Gerencie sua conta</p>
+            </div>
+        </header>
+        
+        <main class="profile-content">
+            <!-- Seção de Informações Pessoais -->
+            <div class="profile-section">
+                <h2>Informações Pessoais</h2>
+                
+                <div class="profile-info-card">
+                    <img src="assets/perfil.png" alt="Avatar" class="profile-avatar-large">
+                    <h3 id="profile-display-name">Nome do Usuário</h3>
+                    <p id="profile-display-email">email@usuario.com</p>
+                    <p id="profile-display-username">Matrícula/SIAPE: 000000</p>
+                </div>
+
+                <div class="profile-actions-grid">
+                    <button id="profile-edit-btn" class="profile-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                            <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                        </svg>
+                        Editar Dados Pessoais
+                    </button>
+                    
+                    <button id="profile-password-btn" class="profile-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                            <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+                        </svg>
+                        Alterar Senha
+                    </button>
+                </div>
             </div>
 
-            <div class="profile-actions">
-                <button id="profile-btn-edit" class="auth-button secondary">Editar Dados (Em breve)</button>
-                <button id="profile-btn-logout" class="auth-button secondary">Sair da Conta</button>
-                <button id="profile-btn-delete" class="auth-button danger">Excluir Conta (Em breve)</button>
+            <!-- Seção de Ações da Conta -->
+            <div class="profile-section">
+                <h2>Ações da Conta</h2>
+                
+                <div class="profile-actions-grid">
+                    <button id="profile-logout-btn" class="profile-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
+                        </svg>
+                        Sair da Conta
+                    </button>
+                    
+                    <button id="profile-delete-btn" class="profile-action-btn danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+                        </svg>
+                        Excluir Conta
+                    </button>
+                </div>
             </div>
-            
-            <button id="profile-modal-close-btn" class="auth-button">Fechar</button>
-        </div>
+        </main>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
