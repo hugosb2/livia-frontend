@@ -1052,32 +1052,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Header adjustment: keep app-bar visible when browser chrome (address bar) is present
         // ----- CÓDIGO NOVO (CORRIGIDO) -----
+        // ----- CÓDIGO NOVO (CORREÇÃO FINAL) -----
         function updateHeaderPosition() {
             if (!hasAppBar) return;
             const vv = window.visualViewport;
             // vv.offsetTop é a altura da barra de endereço (quando visível)
             const offset = vv ? (vv.offsetTop || 0) : 0; 
 
-            // Define o header como fixo
+            // 1. Define a posição base (posição e z-index)
             appBar.style.position = 'fixed';
             appBar.style.left = '0';
             appBar.style.right = '0';
             appBar.style.zIndex = '1500';
 
-            // Define o 'top' para ser a soma da "safe-area" (notch/status bar)
-            // + o "offset" (barra de endereço)
-            // Esta é a única lógica necessária.
+            // 2. Define o 'top' inicial com base no offset (esta é a "suposição")
             try {
                 appBar.style.top = `calc(env(safe-area-inset-top) + ${offset}px)`;
             } catch (e) {
                 appBar.style.top = `${offset}px`;
             }
+            
+            // 3. Garante que 'transform' e 'transition' estejam limpos
+            //    antes da medição
+            appBar.style.willChange = 'top, transform';
+            appBar.style.transform = 'translateZ(0)';
+            appBar.style.transition = ''; // <-- SEM TRANSIÇÃO (corrige o "deslize")
 
-            // Remove qualquer 'transition' ou 'transform' que possa ter sido 
-            // aplicado anteriormente e que causava o bug do "deslize".
-            appBar.style.transition = ''; 
-            appBar.style.transform = 'translateZ(0)'; // Apenas para performance
-            appBar.style.willChange = 'top'; // Vamos animar apenas o 'top'
+            // 4. Mede a posição REAL após o browser pintar (requestAnimationFrame)
+            //    Isso corrige o bug de "ficar escondida"
+            requestAnimationFrame(() => {
+                try {
+                    const rect = appBar.getBoundingClientRect();
+                    const visualTop = vv ? (vv.offsetTop || 0) : 0;
+                    let needed = 0;
+
+                    // Se a barra estiver "escondida" (acima do topo visível)
+                    if (rect.top < visualTop) {
+                        // Calcula o quanto precisamos "empurrar" para baixo
+                        needed = visualTop - rect.top; 
+                    }
+                    
+                    // Aplica a correção via transform INSTANTANEAMENTE (sem 'transition')
+                    appBar.style.transform = `translateY(${needed}px) translateZ(0)`;
+                    
+                } catch (err) {
+                    // ignora erros de medição
+                }
+            });
         }
 
         // run header update after pointer release as well
