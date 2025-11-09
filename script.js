@@ -662,7 +662,358 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================================================
-    // 6. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
+    // 6. NOVAS FUNÇÕES PARA GERENCIAMENTO DE CONTA
+    // ===================================================================
+
+    // Elementos do modal de edição
+    let editProfileModal, editProfileForm, editProfileCloseBtn;
+    let changePasswordModal, changePasswordForm, changePasswordCloseBtn;
+    let deleteAccountModal, deleteAccountForm, deleteAccountCloseBtn;
+
+    // Inicializar modais de gerenciamento de conta
+    function initAccountModals() {
+        // Criar modais dinamicamente
+        createEditProfileModal();
+        createChangePasswordModal();
+        createDeleteAccountModal();
+        
+        // Atualizar textos dos botões existentes
+        document.getElementById('profile-btn-edit').textContent = 'Editar Dados';
+        document.getElementById('profile-btn-delete').textContent = 'Excluir Conta';
+        
+        // Adicionar botão de alterar senha no modal de perfil
+        const profileActions = document.querySelector('.profile-actions');
+        const changePasswordBtn = document.createElement('button');
+        changePasswordBtn.id = 'profile-btn-change-password';
+        changePasswordBtn.className = 'auth-button secondary';
+        changePasswordBtn.textContent = 'Alterar Senha';
+        changePasswordBtn.addEventListener('click', () => {
+            hideProfileModal();
+            showCustomModal(changePasswordModal);
+        });
+        
+        // Inserir antes do botão de logout
+        profileActions.insertBefore(changePasswordBtn, profileBtnLogout);
+    }
+
+    function createEditProfileModal() {
+        editProfileModal = document.createElement('div');
+        editProfileModal.id = 'edit-profile-modal';
+        editProfileModal.className = 'modal-overlay';
+        editProfileModal.innerHTML = `
+            <div class="modal-card profile-modal-card">
+                <h2>Editar Perfil</h2>
+                <form id="edit-profile-form">
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="edit-first-name">Nome</label>
+                            <input type="text" id="edit-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-last-name">Sobrenome</label>
+                            <input type="text" id="edit-last-name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">E-mail</label>
+                        <input type="email" id="edit-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-username">Matrícula/SIAPE</label>
+                        <input type="text" id="edit-username" disabled style="background-color: var(--cor-input-fundo);">
+                        <small style="color: var(--cor-texto-secundario); font-size: 0.8rem;">Matrícula/SIAPE não pode ser alterada</small>
+                    </div>
+                    <div class="step-nav-buttons">
+                        <button type="button" id="edit-profile-cancel" class="auth-button secondary">Cancelar</button>
+                        <button type="submit" class="auth-button">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(editProfileModal);
+
+        editProfileForm = document.getElementById('edit-profile-form');
+        editProfileCloseBtn = document.getElementById('edit-profile-cancel');
+
+        editProfileForm.addEventListener('submit', handleEditProfile);
+        editProfileCloseBtn.addEventListener('click', () => hideCustomModal(editProfileModal));
+        editProfileModal.addEventListener('click', (e) => {
+            if (e.target === editProfileModal) hideCustomModal(editProfileModal);
+        });
+    }
+
+    function createChangePasswordModal() {
+        changePasswordModal = document.createElement('div');
+        changePasswordModal.id = 'change-password-modal';
+        changePasswordModal.className = 'modal-overlay';
+        changePasswordModal.innerHTML = `
+            <div class="modal-card profile-modal-card">
+                <h2>Alterar Senha</h2>
+                <form id="change-password-form">
+                    <div class="form-group form-group-password">
+                        <label for="current-password">Senha Atual</label>
+                        <input type="password" id="current-password" required>
+                        <svg class="password-toggle-icon" viewBox="0 0 24 24"><path d="${eyeIconPath}"/></svg>
+                    </div>
+                    <div class="form-group form-group-password">
+                        <label for="new-password">Nova Senha</label>
+                        <input type="password" id="new-password" required>
+                        <svg class="password-toggle-icon" viewBox="0 0 24 24"><path d="${eyeIconPath}"/></svg>
+                    </div>
+                    <div class="form-group form-group-password">
+                        <label for="confirm-new-password">Confirmar Nova Senha</label>
+                        <input type="password" id="confirm-new-password" required>
+                        <svg class="password-toggle-icon" viewBox="0 0 24 24"><path d="${eyeIconPath}"/></svg>
+                    </div>
+                    <div class="step-nav-buttons">
+                        <button type="button" id="change-password-cancel" class="auth-button secondary">Cancelar</button>
+                        <button type="submit" class="auth-button">Alterar Senha</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(changePasswordModal);
+
+        changePasswordForm = document.getElementById('change-password-form');
+        changePasswordCloseBtn = document.getElementById('change-password-cancel');
+
+        // Adicionar event listeners para os ícones de senha
+        const changePasswordIcons = changePasswordModal.querySelectorAll('.password-toggle-icon');
+        changePasswordIcons[0].addEventListener('click', () => togglePasswordVisibility(document.getElementById('current-password'), changePasswordIcons[0]));
+        changePasswordIcons[1].addEventListener('click', () => togglePasswordVisibility(document.getElementById('new-password'), changePasswordIcons[1]));
+        changePasswordIcons[2].addEventListener('click', () => togglePasswordVisibility(document.getElementById('confirm-new-password'), changePasswordIcons[2]));
+
+        changePasswordForm.addEventListener('submit', handleChangePassword);
+        changePasswordCloseBtn.addEventListener('click', () => hideCustomModal(changePasswordModal));
+        changePasswordModal.addEventListener('click', (e) => {
+            if (e.target === changePasswordModal) hideCustomModal(changePasswordModal);
+        });
+    }
+
+    function createDeleteAccountModal() {
+        deleteAccountModal = document.createElement('div');
+        deleteAccountModal.id = 'delete-account-modal';
+        deleteAccountModal.className = 'modal-overlay';
+        deleteAccountModal.innerHTML = `
+            <div class="modal-card profile-modal-card">
+                <h2 style="color: var(--cor-erro);">Excluir Conta</h2>
+                <p style="text-align: left; margin-bottom: 20px;">
+                    <strong>Atenção:</strong> Esta ação é irreversível. Todos os seus dados, incluindo histórico de conversas, serão permanentemente excluídos.
+                </p>
+                <form id="delete-account-form">
+                    <div class="form-group form-group-password">
+                        <label for="delete-password">Digite sua senha para confirmar</label>
+                        <input type="password" id="delete-password" required>
+                        <svg class="password-toggle-icon" viewBox="0 0 24 24"><path d="${eyeIconPath}"/></svg>
+                    </div>
+                    <div class="step-nav-buttons">
+                        <button type="button" id="delete-account-cancel" class="auth-button secondary">Cancelar</button>
+                        <button type="submit" class="auth-button danger">Excluir Minha Conta</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(deleteAccountModal);
+
+        deleteAccountForm = document.getElementById('delete-account-form');
+        deleteAccountCloseBtn = document.getElementById('delete-account-cancel');
+
+        // Adicionar event listener para o ícone de senha
+        const deletePasswordIcon = deleteAccountModal.querySelector('.password-toggle-icon');
+        deletePasswordIcon.addEventListener('click', () => togglePasswordVisibility(document.getElementById('delete-password'), deletePasswordIcon));
+
+        deleteAccountForm.addEventListener('submit', handleDeleteAccount);
+        deleteAccountCloseBtn.addEventListener('click', () => hideCustomModal(deleteAccountModal));
+        deleteAccountModal.addEventListener('click', (e) => {
+            if (e.target === deleteAccountModal) hideCustomModal(deleteAccountModal);
+        });
+    }
+
+    function showCustomModal(modalElement) {
+        modalElement.classList.add('visible');
+    }
+
+    function hideCustomModal(modalElement) {
+        modalElement.classList.remove('visible');
+        // Limpar formulários
+        if (modalElement === changePasswordModal) {
+            changePasswordForm.reset();
+        } else if (modalElement === deleteAccountModal) {
+            deleteAccountForm.reset();
+        }
+    }
+
+    // Carregar dados do perfil para edição
+    async function loadProfileForEdit() {
+        try {
+            const response = await apiFetch('/profile');
+            if (!response.ok) throw new Error('Falha ao carregar perfil');
+            
+            const profile = await response.json();
+            
+            document.getElementById('edit-first-name').value = profile.first_name || '';
+            document.getElementById('edit-last-name').value = profile.last_name || '';
+            document.getElementById('edit-email').value = profile.email || '';
+            document.getElementById('edit-username').value = profile.username || '';
+            
+            showCustomModal(editProfileModal);
+        } catch (error) {
+            console.error('Erro ao carregar perfil:', error);
+            showModal('Erro', 'Não foi possível carregar os dados do perfil.', false);
+        }
+    }
+
+    // Handler para editar perfil
+    async function handleEditProfile(e) {
+        e.preventDefault();
+        
+        const formData = {
+            first_name: document.getElementById('edit-first-name').value.trim(),
+            last_name: document.getElementById('edit-last-name').value.trim(),
+            email: document.getElementById('edit-email').value.trim()
+        };
+
+        if (!formData.first_name || !formData.last_name || !formData.email) {
+            showModal('Campos Obrigatórios', 'Por favor, preencha todos os campos.', false);
+            return;
+        }
+
+        try {
+            const response = await apiFetch('/profile', {
+                method: 'PUT',
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Erro ao atualizar perfil');
+            }
+
+            const data = await response.json();
+            
+            // Atualizar dados no localStorage
+            const currentUser = getStoredUser();
+            if (currentUser) {
+                currentUser.first_name = formData.first_name;
+                currentUser.last_name = formData.last_name;
+                currentUser.email = formData.email;
+                storeUser(currentUser);
+            }
+            
+            hideCustomModal(editProfileModal);
+            showModal('Perfil Atualizado!', 'Seus dados foram atualizados com sucesso.', true);
+            
+            // Atualizar modal de perfil se estiver aberto
+            if (profileModal.classList.contains('visible')) {
+                showProfileModal();
+            }
+            
+        } catch (error) {
+            console.error('Erro ao atualizar perfil:', error);
+            showModal('Erro', error.message, false);
+        }
+    }
+
+    // Handler para alterar senha
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            showModal('Campos Obrigatórios', 'Por favor, preencha todos os campos.', false);
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            showModal('Erro na Senha', 'As novas senhas não conferem.', false);
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            showModal('Senha Fraca', 'A nova senha deve ter pelo menos 6 caracteres.', false);
+            return;
+        }
+
+        try {
+            const response = await apiFetch('/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Erro ao alterar senha');
+            }
+
+            hideCustomModal(changePasswordModal);
+            showModal('Senha Alterada!', 'Sua senha foi alterada com sucesso.', true);
+            changePasswordForm.reset();
+            
+        } catch (error) {
+            console.error('Erro ao alterar senha:', error);
+            showModal('Erro', error.message, false);
+        }
+    }
+
+    // Handler para excluir conta
+    async function handleDeleteAccount(e) {
+        e.preventDefault();
+        
+        const password = document.getElementById('delete-password').value;
+
+        if (!password) {
+            showModal('Senha Obrigatória', 'Por favor, digite sua senha para confirmar a exclusão.', false);
+            return;
+        }
+
+        if (!confirm('Tem certeza absoluta que deseja excluir sua conta? Esta ação NÃO pode ser desfeita!')) {
+            return;
+        }
+
+        try {
+            const response = await apiFetch('/account', {
+                method: 'DELETE',
+                body: JSON.stringify({ password: password })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Erro ao excluir conta');
+            }
+
+            hideCustomModal(deleteAccountModal);
+            showModal('Conta Excluída', 'Sua conta foi excluída com sucesso.', true);
+            
+            // Fazer logout após exclusão
+            setTimeout(() => {
+                handleLogout();
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Erro ao excluir conta:', error);
+            showModal('Erro', error.message, false);
+        }
+    }
+
+    // Adicionar event listeners para os botões de gerenciamento de conta
+    document.getElementById('profile-btn-edit').addEventListener('click', () => {
+        hideProfileModal();
+        loadProfileForEdit();
+    });
+    
+    document.getElementById('profile-btn-delete').addEventListener('click', () => {
+        hideProfileModal();
+        showCustomModal(deleteAccountModal);
+    });
+
+    // ===================================================================
+    // 7. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
     // ===================================================================
 
     function initApp() {
@@ -683,6 +1034,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     splashScreen.classList.add('hidden');
                 }, 2500); 
             }
+            
+            // Inicializar modais de conta
+            initAccountModals();
             
             loadConversations();
         }
