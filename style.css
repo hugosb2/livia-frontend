@@ -401,10 +401,10 @@ body {
     background: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid var(--cor-input-borda);
     gap: 16px;
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     /* Safe area para mobile */
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding-top: calc(24px + env(safe-area-inset-top));
     padding-left: max(24px, env(safe-area-inset-left));
     padding-right: max(24px, env(safe-area-inset-right));
     position: sticky;
@@ -743,8 +743,8 @@ body {
     align-items: center;
     background-color: rgba(255, 255, 255, 0.95);
     border-top: 1px solid var(--cor-input-borda);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     /* Safe area para mobile */
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     padding-left: max(24px, env(safe-area-inset-left));
@@ -1219,8 +1219,8 @@ body {
     text-align: center;
     transform: scale(0.9) translateY(20px);
     transition: transform var(--transition-normal);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
