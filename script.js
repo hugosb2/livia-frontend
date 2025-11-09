@@ -800,7 +800,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const messageElement = document.createElement('div');
             messageElement.classList.add('chat-message');
-            if (!animate) messageElement.style.animation = 'none'; 
+            
+            // CORREÇÃO: Se a animação estiver desativada,
+            // force a opacidade e transforme para o estado final.
+            if (!animate) {
+                messageElement.style.animation = 'none';
+                messageElement.style.opacity = 1;
+                messageElement.style.transform = 'none';
+            } 
 
             const avatar = document.createElement('div');
             avatar.classList.add('avatar');
