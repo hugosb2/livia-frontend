@@ -407,9 +407,14 @@ body {
     padding-top: calc(24px + env(safe-area-inset-top));
     padding-left: max(24px, env(safe-area-inset-left));
     padding-right: max(24px, env(safe-area-inset-right));
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    z-index: 1000;
+    box-sizing: border-box;
+    will-change: transform;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -459,6 +464,7 @@ body {
 .header-text {
     display: flex;
     flex-direction: column;
+    padding-top: calc(64px + env(safe-area-inset-top));
     line-height: 1.3;
 }
 
