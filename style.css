@@ -403,15 +403,15 @@ body {
     gap: 16px;
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    /* Safe area para mobile */
-    padding-top: calc(24px + env(safe-area-inset-top));
+    /* Safe area: posicionar o header abaixo da área segura do topo */
+    padding-top: 12px;
     padding-left: max(24px, env(safe-area-inset-left));
     padding-right: max(24px, env(safe-area-inset-right));
-    position: fixed;
-    top: 0;
+    position: absolute;
+    top: env(safe-area-inset-top);
     left: 0;
     right: 0;
-    width: 100vw;
+    width: 100%;
     z-index: 1000;
     box-sizing: border-box;
     will-change: transform;
