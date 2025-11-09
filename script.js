@@ -1051,51 +1051,33 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('pointerup', onPointerRelease);
 
         // Header adjustment: keep app-bar visible when browser chrome (address bar) is present
+        // ----- CÓDIGO NOVO (CORRIGIDO) -----
         function updateHeaderPosition() {
             if (!hasAppBar) return;
             const vv = window.visualViewport;
-            const offset = vv ? (vv.offsetTop || 0) : 0;
+            // vv.offsetTop é a altura da barra de endereço (quando visível)
+            const offset = vv ? (vv.offsetTop || 0) : 0; 
 
-            // set header to fixed on mobile and push it down by the visualViewport offset plus safe-area
+            // Define o header como fixo
             appBar.style.position = 'fixed';
             appBar.style.left = '0';
             appBar.style.right = '0';
             appBar.style.zIndex = '1500';
 
-            // prefer calc with safe-area; fallback to numeric offset
+            // Define o 'top' para ser a soma da "safe-area" (notch/status bar)
+            // + o "offset" (barra de endereço)
+            // Esta é a única lógica necessária.
             try {
                 appBar.style.top = `calc(env(safe-area-inset-top) + ${offset}px)`;
             } catch (e) {
                 appBar.style.top = `${offset}px`;
             }
 
-            // ensure compositing for smoother transitions
-            appBar.style.willChange = 'transform, top';
-            appBar.style.transform = 'translateZ(0)';
-
-            // If the appBar is still visually overlapped by browser chrome, nudge it down using translateY
-            // Measure after paint using requestAnimationFrame
-            requestAnimationFrame(() => {
-                try {
-                    const rect = appBar.getBoundingClientRect();
-                    const visualTop = vv ? (vv.offsetTop || 0) : 0;
-                    // If the top of the appBar is above the visual viewport top (overlapped), compute needed shift
-                    if (rect.top < visualTop + 1) {
-                        const needed = (visualTop + 4) - rect.top; // small padding
-                        // combine with any existing transform used for keyboard handling
-                        const currentTransform = inputRow.style.transform || '';
-                        // apply translateY to appBar to push it down
-                        appBar.style.transition = 'transform 160ms ease-out, top 160ms ease-out';
-                        appBar.style.transform = `translateY(${needed}px) translateZ(0)`;
-                    } else {
-                        // reset any nudging
-                        appBar.style.transition = '';
-                        appBar.style.transform = 'translateZ(0)';
-                    }
-                } catch (err) {
-                    // ignore measurement errors
-                }
-            });
+            // Remove qualquer 'transition' ou 'transform' que possa ter sido 
+            // aplicado anteriormente e que causava o bug do "deslize".
+            appBar.style.transition = ''; 
+            appBar.style.transform = 'translateZ(0)'; // Apenas para performance
+            appBar.style.willChange = 'top'; // Vamos animar apenas o 'top'
         }
 
         // run header update after pointer release as well
