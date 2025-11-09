@@ -1178,6 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ----- CÓDIGO CORRIGIDO -----
     function hideProfileScreen() {
         console.log('Fechando tela de perfil...');
         
@@ -1195,6 +1196,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (appLayout) {
             appLayout.style.display = 'flex';
         }
+
+        // --- CORREÇÃO ADICIONADA ---
+        // Força a atualização do layout após a tela voltar.
+        // Isso corrige o input cortado.
+        setTimeout(() => {
+            updateForViewport();
+            chatView.scrollToBottom();
+        }, 50); // 50ms de delay para garantir que o 'display: flex' foi renderizado
     }
 
     // Event Listeners para a tela de perfil - COM VERIFICAÇÕES
