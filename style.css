@@ -58,6 +58,12 @@
     --radius-medium: 12px;
     --radius-large: 16px;
     --radius-full: 9999px;
+    
+    /* Safe Area */
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+    --safe-area-right: env(safe-area-inset-right);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -123,25 +129,36 @@ body {
     background-color: var(--cor-fundo);
 }
 
+/* Background para mobile */
+@media (max-width: 767px) {
+    body {
+        background-image: url('assets/background.png');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+}
+
 /* =================================================================== */
 /* 3. BARRA LATERAL (SIDEBAR)                                          */
 /* =================================================================== */
 .history-sidebar {
     width: 280px;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85);
     color: var(--sidebar-texto);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     border-right: 1px solid var(--sidebar-divider);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 @media (prefers-color-scheme: dark) {
     .history-sidebar {
-        background-color: rgba(26, 26, 26, 0.9);
+        background-color: rgba(26, 26, 26, 0.85);
     }
 }
 
@@ -183,6 +200,8 @@ body {
     cursor: pointer;
     transition: all var(--transition-normal);
     box-shadow: 0 2px 8px rgba(0, 77, 34, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .history-new-chat-btn:hover {
@@ -247,6 +266,8 @@ body {
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .history-item::before {
@@ -315,6 +336,8 @@ body {
     width: 28px;
     height: 28px;
     transition: all var(--transition-fast);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .history-item-btn:hover {
@@ -344,6 +367,9 @@ body {
     background: var(--cor-fundo);
     flex-grow: 1;
     position: relative;
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
 }
 
 /* App Bar Moderna */
@@ -352,16 +378,20 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.85);
     border-bottom: 1px solid var(--cor-input-borda);
     gap: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    /* Safe area para mobile */
+    padding-top: calc(12px + var(--safe-area-top));
+    padding-left: calc(24px + var(--safe-area-left));
+    padding-right: calc(24px + var(--safe-area-right));
 }
 
 @media (prefers-color-scheme: dark) {
     .app-bar {
-        background: rgba(26, 26, 26, 0.9);
+        background: rgba(26, 26, 26, 0.85);
     }
 }
 
@@ -385,6 +415,8 @@ body {
     justify-content: center;
     transition: all var(--transition-normal);
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .mobile-menu-btn:hover {
@@ -435,6 +467,8 @@ body {
     justify-content: center;
     transition: all var(--transition-normal);
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .app-bar-icon-btn:hover {
@@ -467,6 +501,9 @@ body {
     flex-direction: column;
     gap: 20px;
     scroll-behavior: smooth;
+    /* Safe area para mobile */
+    padding-left: calc(24px + var(--safe-area-left));
+    padding-right: calc(24px + var(--safe-area-right));
 }
 
 /* Scrollbar personalizada */
@@ -531,6 +568,8 @@ body {
     box-shadow: 0 2px 8px var(--cor-sombra);
     word-wrap: break-word;
     line-height: 1.6;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 /* Mensagens do usuário */
@@ -619,6 +658,8 @@ body {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     overflow-x: auto;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .message-bubble code {
@@ -672,15 +713,19 @@ body {
     padding: 16px 24px;
     gap: 12px;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85);
     border-top: 1px solid var(--cor-input-borda);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    /* Safe area para mobile */
+    padding-bottom: calc(16px + var(--safe-area-bottom));
+    padding-left: calc(24px + var(--safe-area-left));
+    padding-right: calc(24px + var(--safe-area-right));
 }
 
 @media (prefers-color-scheme: dark) {
     .input-row {
-        background-color: rgba(26, 26, 26, 0.9);
+        background-color: rgba(26, 26, 26, 0.85);
     }
 }
 
@@ -695,6 +740,8 @@ body {
     font-family: inherit;
     transition: all var(--transition-normal);
     resize: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 #pergunta-input:focus {
@@ -722,6 +769,8 @@ body {
     transition: all var(--transition-normal);
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(0, 77, 34, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 #btn-perguntar svg {
@@ -765,6 +814,11 @@ body {
     transition: opacity 0.5s ease, visibility 0.5s ease;
     opacity: 1;
     visibility: visible;
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
 #splash-screen.hidden {
@@ -824,25 +878,30 @@ body {
     top: 0;
     left: 0;
     background: linear-gradient(135deg, rgba(0, 77, 34, 0.05) 0%, rgba(0, 138, 62, 0.05) 100%);
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
 .auth-container-content {
     width: 100%;
     max-width: 460px;
     padding: 32px;
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: var(--radius-large);
     box-shadow: 0 8px 32px var(--cor-sombra-forte);
     margin: 20px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
     .auth-container-content {
-        background-color: rgba(31, 31, 31, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(31, 31, 31, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 }
 
@@ -858,6 +917,8 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 4px 16px var(--cor-sombra-media);
     border: 3px solid var(--cor-primaria);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .form-container h1 {
@@ -911,6 +972,8 @@ body {
     font-size: 1rem;
     font-family: inherit;
     transition: all var(--transition-normal);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .form-group input:focus,
@@ -934,6 +997,8 @@ body {
     transition: all var(--transition-normal);
     margin-top: 12px;
     box-shadow: 0 4px 12px rgba(0, 77, 34, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .auth-button:hover {
@@ -994,6 +1059,8 @@ body {
     background: rgba(239, 68, 68, 0.1);
     border-radius: var(--radius-small);
     border-left: 3px solid var(--cor-erro);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 /* Senha com visibilidade */
@@ -1015,6 +1082,8 @@ body {
     fill: var(--cor-texto-secundario);
     cursor: pointer;
     transition: fill var(--transition-fast);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .password-toggle-icon:hover {
@@ -1056,6 +1125,8 @@ body {
     background: var(--cor-input-fundo);
     border-radius: var(--radius-small);
     display: inline-block;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .step-nav-buttons {
@@ -1087,6 +1158,11 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-normal);
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
 .modal-overlay.visible {
@@ -1104,15 +1180,15 @@ body {
     text-align: center;
     transform: scale(0.9) translateY(20px);
     transition: transform var(--transition-normal);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
     .modal-card {
         background-color: rgba(31, 31, 31, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 }
 
@@ -1165,6 +1241,8 @@ body {
     margin-bottom: 16px;
     border: 4px solid var(--cor-primaria);
     box-shadow: 0 4px 16px var(--cor-sombra-media);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .profile-info h3 {
@@ -1200,6 +1278,11 @@ body {
     top: 0;
     left: 0;
     z-index: 1000;
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
 .profile-header {
@@ -1207,16 +1290,20 @@ body {
     align-items: center;
     gap: 16px;
     padding: 16px 24px;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85);
     border-bottom: 1px solid var(--cor-input-borda);
     min-height: 80px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    /* Safe area para mobile */
+    padding-top: calc(16px + var(--safe-area-top));
+    padding-left: calc(24px + var(--safe-area-left));
+    padding-right: calc(24px + var(--safe-area-right));
 }
 
 @media (prefers-color-scheme: dark) {
     .profile-header {
-        background-color: rgba(26, 26, 26, 0.9);
+        background-color: rgba(26, 26, 26, 0.85);
     }
 }
 
@@ -1233,6 +1320,8 @@ body {
     justify-content: center;
     transition: all var(--transition-normal);
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .profile-back-btn:hover {
@@ -1249,6 +1338,9 @@ body {
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
+    /* Safe area para mobile */
+    padding-left: calc(24px + var(--safe-area-left));
+    padding-right: calc(24px + var(--safe-area-right));
 }
 
 .profile-section {
@@ -1258,8 +1350,8 @@ body {
     box-shadow: 0 2px 12px var(--cor-sombra);
     margin-bottom: 20px;
     border: 1px solid var(--cor-input-borda);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1295,6 +1387,8 @@ body {
     border: 3px solid var(--cor-primaria);
     box-shadow: 0 4px 12px var(--cor-sombra-media);
     background-color: var(--cor-input-fundo);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .profile-info-card h3 {
@@ -1335,6 +1429,8 @@ body {
     text-align: left;
     width: 100%;
     box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .profile-action-btn:hover {
@@ -1377,6 +1473,9 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-normal);
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
 }
 
 .mobile-menu-overlay.visible {
@@ -1396,8 +1495,11 @@ body {
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--sidebar-divider);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    /* Safe area para mobile */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1417,6 +1519,8 @@ body {
     justify-content: space-between;
     align-items: center;
     background-color: transparent;
+    /* Safe area para mobile */
+    padding-top: calc(16px + var(--safe-area-top));
 }
 
 .mobile-sidebar-header .logo-container {
@@ -1445,6 +1549,8 @@ body {
     justify-content: center;
     transition: all var(--transition-normal);
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .mobile-sidebar-close:hover {
@@ -1479,6 +1585,8 @@ body {
     cursor: pointer;
     transition: all var(--transition-normal);
     box-shadow: 0 2px 8px rgba(0, 77, 34, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .mobile-new-chat-btn:hover {
@@ -1503,6 +1611,9 @@ body {
     .app-bar {
         padding: 12px 16px;
         gap: 12px;
+        padding-top: calc(12px + var(--safe-area-top));
+        padding-left: calc(16px + var(--safe-area-left));
+        padding-right: calc(16px + var(--safe-area-right));
     }
     
     .header-left {
@@ -1533,6 +1644,8 @@ body {
     .chat-display {
         padding: 16px;
         gap: 16px;
+        padding-left: calc(16px + var(--safe-area-left));
+        padding-right: calc(16px + var(--safe-area-right));
     }
     
     .chat-message {
@@ -1541,6 +1654,9 @@ body {
     
     .input-row {
         padding: 12px 16px;
+        padding-bottom: calc(12px + var(--safe-area-bottom));
+        padding-left: calc(16px + var(--safe-area-left));
+        padding-right: calc(16px + var(--safe-area-right));
     }
     
     /* Garantir que o menu móvel ocupe a tela toda */
@@ -1563,6 +1679,8 @@ body {
     
     .profile-content {
         padding: 20px 16px;
+        padding-left: calc(16px + var(--safe-area-left));
+        padding-right: calc(16px + var(--safe-area-right));
     }
     
     .profile-section {
@@ -1627,10 +1745,15 @@ body {
 @media (min-width: 1024px) {
     .chat-display {
         padding: 32px;
+        padding-left: calc(32px + var(--safe-area-left));
+        padding-right: calc(32px + var(--safe-area-right));
     }
     
     .input-row {
         padding: 20px 32px;
+        padding-bottom: calc(20px + var(--safe-area-bottom));
+        padding-left: calc(32px + var(--safe-area-left));
+        padding-right: calc(32px + var(--safe-area-right));
     }
     
     #pergunta-input {
