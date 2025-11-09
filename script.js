@@ -1003,14 +1003,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return keyboardHeight;
         }
 
+// ----- CÓDIGO NOVO (CORRIGIDO) -----
         const updateForViewport = debounce(() => {
             try {
                 const keyboardHeight = estimateKeyboardHeight();
-                // only apply if changed meaningfully
+                
+                // Se a altura do teclado mudou significativamente...
                 if (Math.abs(keyboardHeight - lastKeyboardHeight) > 2) {
-                    applyPosition(keyboardHeight);
+                    
+                    // Se o teclado APARECEU (altura > 0)
+                    if (keyboardHeight > 0) {
+                        applyPosition(keyboardHeight);
+                    } 
+                    // Se o teclado DESAPARECEU (altura = 0)
+                    else {
+                        resetPosition(); // <- Esta é a correção principal
+                    }
+                    lastKeyboardHeight = keyboardHeight; // Atualiza a última altura
                 }
-                // also adjust header position to account for address bar / visual viewport offset
+
+                // Ajusta o header (app-bar) independentemente do teclado
                 try {
                     if (hasAppBar) updateHeaderPosition();
                 } catch (err) {
