@@ -1180,6 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ----- CÓDIGO CORRIGIDO -----
     // ----- CÓDIGO CORRIGIDO -----
+    // ----- CÓDIGO CORRIGIDO (com sua sugestão de focar no input) -----
     function hideProfileScreen() {
         console.log('Fechando tela de perfil...');
         
@@ -1198,25 +1199,19 @@ document.addEventListener('DOMContentLoaded', () => {
             appLayout.style.display = 'flex';
         }
 
-        // --- CORREÇÃO ROBUSTA (requestAnimationFrame) ---
+        // --- CORREÇÃO (Sua sugestão de focar no input) ---
         // Espera o navegador estar pronto para desenhar o próximo frame.
         requestAnimationFrame(() => {
-            // Às vezes, um rAF não é suficiente. Um timeout(0) força
-            // o código a rodar no final da fila de eventos, garantindo
-            // que o layout 'display: flex' já foi calculado.
+            // Força o código a rodar no final da fila de eventos (após o 'display: flex' ser aplicado)
             setTimeout(() => {
-                console.log('Forçando reposicionamento do layout após perfil...');
+                console.log('Focando no input para corrigir layout e abrir teclado...');
                 
-                // Chama as funções de reposicionamento DIRETAMENTE.
-                // Isso é mais seguro do que chamar updateForViewport().
+                // 1. Foca no input
+                if (perguntaInput) {
+                    perguntaInput.focus();
+                }
                 
-                // 1. Reposiciona o 'input-row' para o estado "teclado fechado".
-                resetPosition(); 
-                
-                // 2. Reposiciona o 'app-bar' (header).
-                updateHeaderPosition();
-                
-                // 3. Rola para o final.
+                // 2. Garante que rolou para o final (o focus pode não fazer isso)
                 chatView.scrollToBottom();
             }, 0); // Delay de 0ms
         });
