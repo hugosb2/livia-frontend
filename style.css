@@ -154,9 +154,9 @@ body {
     }
     
     .chat-container {
-        background-color: rgba(248, 250, 249, 0.85);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
+        background-color: rgba(248, 250, 249, 0.65); /* mais transparente para ver o background */
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }
     
     @media (prefers-color-scheme: dark) {
@@ -172,7 +172,7 @@ body {
 .history-sidebar {
     width: 280px;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.72);
     color: var(--sidebar-texto);
     display: flex;
     flex-direction: column;
@@ -391,14 +391,14 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: var(--cor-fundo);
+    background: rgba(255,255,255,0.04);
     flex-grow: 1;
     position: relative;
     padding-top: calc(var(--app-bar-height) + env(safe-area-inset-top));
     padding-bottom: 0;
     overflow: hidden;
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 /* App Bar Moderna */
@@ -407,7 +407,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.88);
     border-bottom: 1px solid var(--cor-input-borda);
     gap: 16px;
     backdrop-filter: blur(40px);
@@ -949,13 +949,13 @@ body {
     width: 100%;
     max-width: 460px;
     padding: 32px;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85);
     border-radius: var(--radius-large);
     box-shadow: 0 8px 32px var(--cor-sombra-forte);
     margin: 20px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1231,7 +1231,7 @@ body {
 }
 
 .modal-card {
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.88);
     padding: 32px;
     border-radius: var(--radius-large);
     box-shadow: 0 12px 48px var(--cor-sombra-forte);
@@ -1242,7 +1242,7 @@ body {
     transition: transform var(--transition-normal);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1404,7 +1404,7 @@ body {
 }
 
 .profile-section {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.72);
     border-radius: var(--radius-large);
     padding: 24px;
     box-shadow: 0 2px 12px var(--cor-sombra);
@@ -1961,6 +1961,7 @@ html {
 /* =================================================================== */
 /* 14. UTILITÁRIOS                                                     */
 /* =================================================================== */
+ 
 
 .text-center {
     text-align: center;
