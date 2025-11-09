@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================================================
-    // 3. (CORRIGIDO) LÓGICA DE AUTENTICAÇÃO (Backend)
+    // 3. LÓGICA DE AUTENTICAÇÃO (Backend) - CORRIGIDA
     // ===================================================================
 
     // --- Helpers de Armazenamento Local ---
@@ -163,25 +163,36 @@ document.addEventListener('DOMContentLoaded', () => {
         options.headers = headers;
 
         try {
+            console.log(`DEBUG: Fazendo requisição para ${endpoint}`);
             const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
 
-            // *** CORREÇÃO: Não tratar 401 em rotas de autenticação ***
+            console.log(`DEBUG: Resposta recebida - Status: ${response.status} para ${endpoint}`);
+            
+            // *** CORREÇÃO: Só tratar 401 como sessão expirada se NÃO for rota de auth ***
             const isAuthRoute = (endpoint === '/login' || endpoint === '/register' || endpoint === '/validate-user');
             
-            if (response.status === 401 && !isAuthRoute && getToken()) {
-                // Se for 401, E temos um token, E NÃO é uma rota de auth,
-                // significa que a sessão expirou.
-                handleLogout();
-                showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
-                return Promise.reject(new Error('Sessão expirada.'));
+            if (response.status === 401) {
+                if (isAuthRoute) {
+                    // Para rotas de auth, 401 significa credenciais inválidas - retornar normalmente
+                    console.log('DEBUG: 401 em rota de auth - credenciais inválidas');
+                    return response;
+                } else if (getToken()) {
+                    // Para outras rotas com token, 401 significa sessão expirada
+                    console.log('DEBUG: 401 em rota protegida - sessão expirada');
+                    handleLogout();
+                    showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
+                    return Promise.reject(new Error('Sessão expirada.'));
+                }
             }
             
             return response;
         } catch (error) {
-            // Pega erros de rede (ex: "Failed to fetch")
             console.error('Fetch Error:', error);
-            showModal('Erro de Rede', 'Não foi possível conectar ao servidor. Verifique sua internet.', false);
-            return Promise.reject(new Error('Erro de Rede'));
+            // Só mostrar modal de rede se não for um erro de sessão expirada
+            if (error.message !== 'Sessão expirada.') {
+                showModal('Erro de Rede', 'Não foi possível conectar ao servidor. Verifique sua internet.', false);
+            }
+            return Promise.reject(error);
         }
     }
 
