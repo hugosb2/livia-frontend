@@ -1003,7 +1003,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return keyboardHeight;
         }
 
-// ----- CÓDIGO NOVO (CORRIGIDO) -----
+        // ===================================================================
+        // INÍCIO DA CORREÇÃO (Passo 1: debounce 10ms)
+        // ===================================================================
         const updateForViewport = debounce(() => {
             try {
                 const keyboardHeight = estimateKeyboardHeight();
@@ -1017,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } 
                     // Se o teclado DESAPARECEU (altura = 0)
                     else {
-                        resetPosition(); // <- Esta é a correção principal
+                        resetPosition(); // <- Esta é a correção
                     }
                     lastKeyboardHeight = keyboardHeight; // Atualiza a última altura
                 }
@@ -1031,7 +1033,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error('Erro ao ajustar visualViewport:', err);
             }
-        }, 10);
+        }, 10); // <-- CORREÇÃO: 60ms para 10ms
+        // ===================================================================
+        // FIM DA CORREÇÃO (Passo 1)
+        // ===================================================================
 
         // Bind events
         if (window.visualViewport) {
@@ -1050,76 +1055,51 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('touchend', onPointerRelease, { passive: true });
         document.addEventListener('pointerup', onPointerRelease);
 
-        // Header adjustment: keep app-bar visible when browser chrome (address bar) is present
-        // ----- CÓDIGO NOVO (CORRIGIDO) -----
-        // ----- CÓDIGO NOVO (CORREÇÃO FINAL) -----
+
+        // ===================================================================
+        // INÍCIO DA CORREÇÃO (Passo 2: Simplificar updateHeaderPosition)
+        // ===================================================================
         function updateHeaderPosition() {
             if (!hasAppBar) return;
             const vv = window.visualViewport;
-            // vv.offsetTop é a altura da barra de endereço (quando visível)
+            // vv.offsetTop é a altura da barra de endereço
             const offset = vv ? (vv.offsetTop || 0) : 0; 
 
-            // 1. Define a posição base (posição e z-index)
+            // Define o header como fixo
             appBar.style.position = 'fixed';
             appBar.style.left = '0';
             appBar.style.right = '0';
             appBar.style.zIndex = '1500';
 
-            // 2. Define o 'top' inicial com base no offset (esta é a "suposição")
+            // Define o 'top' para ser a soma da "safe-area" (notch) + o "offset"
             try {
                 appBar.style.top = `calc(env(safe-area-inset-top) + ${offset}px)`;
             } catch (e) {
                 appBar.style.top = `${offset}px`;
             }
-            
-            // 3. Garante que 'transform' e 'transition' estejam limpos
-            //    antes da medição
-            appBar.style.willChange = 'top, transform';
-            appBar.style.transform = 'translateZ(0)';
-            appBar.style.transition = ''; // <-- SEM TRANSIÇÃO (corrige o "deslize")
 
-            // 4. Mede a posição REAL após o browser pintar (requestAnimationFrame)
-            //    Isso corrige o bug de "ficar escondida"
-            requestAnimationFrame(() => {
-                try {
-                    const rect = appBar.getBoundingClientRect();
-                    const visualTop = vv ? (vv.offsetTop || 0) : 0;
-                    let needed = 0;
-
-                    // Se a barra estiver "escondida" (acima do topo visível)
-                    if (rect.top < visualTop) {
-                        // Calcula o quanto precisamos "empurrar" para baixo
-                        needed = visualTop - rect.top; 
-                    }
-                    
-                    // Aplica a correção via transform INSTANTANEAMENTE (sem 'transition')
-                    appBar.style.transform = `translateY(${needed}px) translateZ(0)`;
-                    
-                } catch (err) {
-                    // ignora erros de medição
-                }
-            });
+            // FORÇA a remoção de qualquer transição ou transformação.
+            // Isso "crava" a barra no lugar instantaneamente.
+            appBar.style.transition = 'none'; 
+            appBar.style.transform = 'none';
+            appBar.style.willChange = 'top'; // Informa que apenas o 'top' mudará
         }
+        // ===================================================================
+        // FIM DA CORREÇÃO (Passo 2)
+        // ===================================================================
 
-        // run header update after pointer release as well
-        document.addEventListener('touchend', () => setTimeout(updateHeaderPosition, 120), { passive: true });
-        document.addEventListener('pointerup', () => setTimeout(updateHeaderPosition, 120));
 
-        // update header on visualViewport events
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', debounce(updateHeaderPosition, 40));
-            window.visualViewport.addEventListener('scroll', debounce(updateHeaderPosition, 40));
-        }
+        // ===================================================================
+        // INÍCIO DA CORREÇÃO (Passo 3: Remover listeners duplicados)
+        // ===================================================================
+
+        // (Bloco de código de document.addEventListener... até visualViewport... FOI REMOVIDO)
 
         // also run once when focusing the input
-        perguntaInput.addEventListener('focus', () => setTimeout(updateHeaderPosition, 60));
-
-        perguntaInput.addEventListener('focus', () => {
-            // run immediately and after short delays to catch keyboard animation
-            updateForViewport();
-            setTimeout(updateForViewport, 180);
-            setTimeout(updateForViewport, 400);
-        });
+        perguntaInput.addEventListener('focus', () => setTimeout(updateForViewport, 60)); // <-- CORREÇÃO: chama updateForViewport
+        // ===================================================================
+        // FIM DA CORREÇÃO (Passo 3)
+        // ===================================================================
 
         perguntaInput.addEventListener('blur', () => {
             // restore layout after keyboard hides
