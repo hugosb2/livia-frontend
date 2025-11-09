@@ -1,14 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Carregado - Iniciando aplicação...');
 
-    // ...existing code...
-
     // ===================================================================
     // 1. CONSTANTES E SELEÇÃO DE ELEMENTOS
     // ===================================================================
 
     // Variáveis de ambiente — obter de env-config.js (window.__ENV__)
-    // NÃO deixar chaves/URLs hardcoded no código.
     const API_BASE_URL = (window.__ENV__ && window.__ENV__.API_BASE_URL) || '';
     const CHATBASE_API_KEY = (window.__ENV__ && window.__ENV__.CHATBASE_API_KEY) || '';
     const CHATBASE_CHATBOT_ID = (window.__ENV__ && window.__ENV__.CHATBASE_CHATBOT_ID) || '';
@@ -299,7 +296,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 storeToken(data.access_token);
                 storeUser(data.user);
-                
+
+                // Ensure splash is hidden and UI is shown immediately after login to avoid a blank screen
+                try {
+                    if (splashScreen && !splashScreen.classList.contains('hidden')) {
+                        splashScreen.classList.add('hidden');
+                    }
+                    if (appLayout) appLayout.style.display = 'flex';
+                    if (authContainer) authContainer.style.display = 'none';
+                    // force a reflow/paint on next frame to avoid layout not updating in some mobile browsers
+                    requestAnimationFrame(() => { document.body.offsetHeight; });
+                } catch (e) {
+                    console.warn('Could not force UI reveal after login', e);
+                }
+
                 initApp();
             } catch (error) {
                 if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.' && loginError) {
@@ -454,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // 5. LÓGICA DE HISTÓRICO DE CONVERSAS
+    // 5. LÓGICA DE HISTÓRICO DE CONVERSAS - CORRIGIDA
     // ===================================================================
 
     async function loadConversations() {
@@ -579,19 +589,90 @@ document.addEventListener('DOMContentLoaded', () => {
         hideMobileMenu();
     }
 
+    // FUNÇÃO CORRIGIDA - CARREGAR CHATS ANTIGOS
     function selectConversation(convId) {
         if (convId === currentConversationId) return; 
 
         const convo = conversations.find(c => c.id === convId);
         if (!convo) return;
-        
+
         currentConversationId = convId;
-        conversationHistory = convo.messages || [];
-        
-        renderChatMessages();
-        chatView.setInputState(true);
-        renderHistoryList(); 
-        renderMobileHistoryList();
+
+        async function loadAndRender() {
+            try {
+                let messages = convo.messages || [];
+                
+                // Se não há mensagens ou o formato parece incorreto, tenta carregar do servidor
+                if ((!messages || messages.length === 0 || !Array.isArray(messages)) && convId) {
+                    try {
+                        const resp = await apiFetch(`/history/${convId}`);
+                        if (resp && resp.ok) {
+                            const data = await resp.json();
+                            console.log('DEBUG: Dados carregados do servidor:', data);
+                            
+                            // Diferentes formatos de resposta do backend
+                            if (Array.isArray(data) && data.length > 0) {
+                                const serverConvo = data[0];
+                                messages = serverConvo.messages || serverConvo.conversation || serverConvo.history || [];
+                            } else if (data && typeof data === 'object') {
+                                messages = data.messages || data.conversation || data.history || [];
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Não foi possível carregar detalhes da conversa:', err);
+                    }
+                }
+
+                // Normalização robusta das mensagens
+                conversationHistory = (messages || []).map(m => {
+                    // Log para debug
+                    console.log('DEBUG: Mensagem original:', m);
+                    
+                    // Diferentes formatos possíveis
+                    let content = '';
+                    let role = 'assistant';
+                    
+                    if (typeof m === 'string') {
+                        content = m;
+                        role = 'assistant'; // Assume que é da assistente se for string simples
+                    } else if (typeof m === 'object') {
+                        content = m.content ?? m.text ?? m.body ?? m.message ?? '';
+                        
+                        // Determinar o papel (role) corretamente
+                        if (m.role) {
+                            role = m.role;
+                        } else if (m.sender === 'user' || m.from === 'user' || m.author === 'user') {
+                            role = 'user';
+                        } else if (m.sender === 'assistant' || m.from === 'assistant' || m.author === 'assistant') {
+                            role = 'assistant';
+                        } else {
+                            // Tentar inferir pelo conteúdo ou padrão
+                            role = content.toLowerCase().includes('olá') || 
+                                   content.toLowerCase().includes('oi, eu sou') || 
+                                   content.toLowerCase().includes('assistente') ? 'assistant' : 'user';
+                        }
+                    }
+                    
+                    return {
+                        content: content,
+                        role: role
+                    };
+                });
+
+                console.log('DEBUG: Mensagens normalizadas:', conversationHistory);
+                
+                renderChatMessages();
+                chatView.setInputState(true);
+                renderHistoryList();
+                renderMobileHistoryList();
+                
+            } catch (err) {
+                console.error('Erro ao carregar conversa específica:', err);
+                showModal('Erro', 'Não foi possível carregar a conversa selecionada.', false);
+            }
+        }
+
+        loadAndRender();
     }
 
     async function deleteConversation(convId) {
