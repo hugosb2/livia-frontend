@@ -1,72 +1,514 @@
-/* splash.css */
-
+/* =================================================================== */
+/* 1. ESTILOS GLOBAIS (Cores, Fontes)                                  */
+/* =================================================================== */
 :root {
     --cor-primaria: #004d22;
+    --cor-secundaria: #008a3e;
     --cor-fundo: #f4f7f6;
+    --cor-app-bar: #ffffff;
     --cor-texto-principal: #1c1c1c;
+    --cor-texto-secundario: #6c757d;
+    --cor-bolha-livia-fundo: #ffffff;
+    --cor-bolha-usuario-fundo: var(--cor-primaria);
+    --cor-bolha-usuario-texto: #ffffff;
+    --cor-input-fundo: #e9ecef;
+    --cor-input-borda-foco: var(--cor-secundaria);
+    --cor-btn-fundo: var(--cor-primaria);
+    --cor-btn-icone: #ffffff;
+    --cor-sombra: rgba(0, 0, 0, 0.08);
+    --cor-erro: #d9534f;
+    --cor-perigo: #d9534f;
+    --cor-perigo-hover: #c9302c;
+    
+    /* Cores da Barra Lateral */
+    --sidebar-fundo: #1e1e1e;
+    --sidebar-texto: #e0e0e0;
+    --sidebar-texto-hover: #ffffff;
+    --sidebar-item-fundo-hover: #2c2c2c;
+    --sidebar-item-fundo-active: var(--cor-primaria);
 }
 
-#splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--cor-fundo);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
-    opacity: 1;
-    visibility: visible;
-}
-
-#splash-screen.hidden {
-    opacity: 0;
-    visibility: hidden;
-}
-
-.splash-content {
-    text-align: center;
-    animation: fadeInSplash 1.5s ease-in-out;
-}
-
-.splash-logo {
-    max-width: 150px;
-    height: auto;
-    margin-bottom: 20px;
-}
-
-.splash-text h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--cor-primaria);
-    margin: 0;
-}
-
-.splash-text p {
-    font-size: 1rem;
-    color: var(--cor-texto-principal);
-    margin: 4px 0 0;
-}
-
-@keyframes fadeInSplash {
-    from {
-        opacity: 0;
-        transform: translateY(15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Adaptação para tema escuro */
 @media (prefers-color-scheme: dark) {
     :root {
         --cor-primaria: #2e7d32;
+        --cor-secundaria: #66bb6a;
         --cor-fundo: #121212;
+        --cor-app-bar: #1e1e1e;
         --cor-texto-principal: #e0e0e0;
+        --cor-texto-secundario: #a0a0a0;
+        --cor-bolha-livia-fundo: #2c2c2c;
+        --cor-input-fundo: #2c2c2c;
+        
+        /* Cores da Barra Lateral (Dark) */
+        --sidebar-fundo: #252525;
+        --sidebar-texto: #cccccc;
+        --sidebar-texto-hover: #ffffff;
+        --sidebar-item-fundo-hover: #333333;
+        --sidebar-item-fundo-active: var(--cor-primaria);
     }
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-principal);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Impede o scroll da página principal */
+}
+
+/* =================================================================== */
+/* 2. LAYOUT DA APLICAÇÃO (APP + SIDEBAR)                          */
+/* =================================================================== */
+.app-layout {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    background-color: var(--cor-fundo);
+}
+
+/* =================================================================== */
+/* 3. ESTILOS DA BARRA LATERAL (HISTORY)                           */
+/* =================================================================== */
+.history-sidebar {
+    width: 280px;
+    height: 100vh;
+    background-color: var(--sidebar-fundo);
+    color: var(--sidebar-texto);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+}
+
+.history-header {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-header .logo-container {
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.history-header .logo {
+    height: 40px;
+    width: auto;
+}
+
+.history-new-chat-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--cor-btn-fundo);
+    color: var(--cor-btn-icone);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.history-new-chat-btn:hover {
+    background-color: var(--cor-secundaria);
+}
+.history-new-chat-btn svg {
+    flex-shrink: 0;
+}
+
+.history-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--sidebar-texto);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item:hover {
+    background-color: var(--sidebar-item-fundo-hover);
+    color: var(--sidebar-texto-hover);
+}
+
+.history-item.active {
+    background-color: var(--sidebar-item-fundo-active);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.history-item-title {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.history-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.history-item-btn {
+    background: none;
+    border: none;
+    color: var(--sidebar-texto);
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+.history-item-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.history-item-btn.delete:hover {
+    color: var(--cor-perigo);
+    background-color: rgba(217, 83, 79, 0.2);
+}
+.history-item-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+
+/* =================================================================== */
+/* 4. ESTILOS DO CHAT                                                  */
+/* =================================================================== */
+
+.chat-container { 
+    width: 100%;
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    box-shadow: none;
+    background-color: color-mix(in srgb, var(--cor-fundo) 85%, transparent); 
+    -webkit-backdrop-filter: blur(10px); 
+    backdrop-filter: blur(10px); 
+    flex-grow: 1;
+}
+
+.app-bar { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 12px 20px; 
+    background-color: transparent; 
+    border-bottom: 1px solid var(--cor-sombra); 
+    gap: 15px; 
+}
+.header-left { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+.header-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.logo-container { height: 40px; flex-shrink: 0; }
+.logo { height: 40px; width: auto; }
+.header-text { display: flex; flex-direction: column; line-height: 1.2; }
+.app-bar h1 { margin: 0; font-size: 1.2rem; font-weight: 500; color: var(--cor-texto-principal); }
+.subtitle { margin: 0; font-size: 0.85rem; color: var(--cor-texto-secundario); }
+
+/* Botões de ícone da App Bar */
+.app-bar-icon-btn {
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    border: none; 
+    background-color: var(--cor-input-fundo); 
+    color: var(--cor-texto-secundario); 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.2s ease; 
+    flex-shrink: 0;
+}
+.app-bar-icon-btn:hover {
+    background-color: var(--cor-secundaria);
+    color: #ffffff;
+}
+.app-bar-icon-btn#btn-logout:hover {
+    background-color: var(--cor-erro);
+    color: #ffffff;
+}
+.app-bar-icon-btn svg { fill: currentColor; }
+
+.app-bar .logo-container {
+    display: none;
+}
+
+.chat-display { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.chat-message { display: flex; align-items: flex-start; gap: 12px; max-width: 85%; opacity: 0; transform: translateY(20px); animation: fadeIn 0.4s ease-out forwards; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+.avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; flex-shrink: 0; background-color: var(--cor-primaria); }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.message-bubble { padding: 12px 18px; border-radius: 20px; background-color: var(--cor-bolha-livia-fundo); box-shadow: 0 2px 5px var(--cor-sombra); word-wrap: break-word; }
+.user-message { align-self: flex-end; flex-direction: row-reverse; }
+.user-message .avatar { display: none; }
+.user-message .message-bubble { background-color: var(--cor-bolha-usuario-fundo); color: var(--cor-bolha-usuario-texto); border-radius: 20px 20px 4px 20px; }
+.livia-message { align-self: flex-start; }
+.livia-message .message-bubble { border-radius: 20px 20px 20px 4px; }
+.message-bubble p { margin: 0 0 10px; }
+.message-bubble p:last-child { margin-bottom: 0; }
+.message-bubble ul, .message-bubble ol { padding-left: 20px; margin: 10px 0; }
+.message-bubble li { margin-bottom: 5px; }
+.message-bubble a { color: var(--cor-secundaria); text-decoration: none; font-weight: 500; }
+.message-bubble a:hover { text-decoration: underline; }
+.message-bubble strong { font-weight: 700; color: var(--cor-primaria); }
+.message-bubble pre { background-color: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; }
+.typing-indicator .message-bubble { display: flex; align-items: center; gap: 8px; }
+.typing-indicator .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--cor-secundaria); animation: typing-bounce 1.2s infinite ease-in-out; }
+.typing-indicator .dot:nth-child(2) { animation-delay: -1.0s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: -0.8s; }
+@keyframes typing-bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+.input-row { display: flex; padding: 12px; gap: 10px; align-items: center; background-color: transparent; border-top: 1px solid var(--cor-sombra); }
+#pergunta-input { flex-grow: 1; padding: 14px 20px; border-radius: 28px; border: 1px solid transparent; background-color: var(--cor-input-fundo); color: var(--cor-texto-principal); font-size: 1rem; transition: all 0.3s ease; }
+#pergunta-input:focus { outline: none; border-color: var(--cor-input-borda-foco); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-input-borda-foco) 20%, transparent); }
+#pergunta-input:disabled { cursor: not-allowed; background-color: #e0e0e0; }
+#btn-perguntar { background-color: var(--cor-btn-fundo); border: none; cursor: pointer; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s ease-in-out, transform 0.2s ease; flex-shrink: 0; }
+#btn-perguntar svg { fill: var(--cor-btn-icone); }
+#btn-perguntar:hover { background-color: var(--cor-secundaria); transform: scale(1.05); }
+#btn-perguntar:disabled { cursor: not-allowed; background-color: #a0a0a0; }
+
+/* =================================================================== */
+/* 5. ESTILOS DA TELA DE SPLASH                                        */
+/* =================================================================== */
+
+#splash-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--cor-fundo); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; opacity: 1; visibility: visible; }
+#splash-screen.hidden { opacity: 0; visibility: hidden; }
+.splash-content { text-align: center; animation: fadeInSplash 1.5s ease-in-out; }
+.splash-logo { max-width: 150px; height: auto; margin-bottom: 20px; }
+.splash-text h1 { font-size: 2.5rem; font-weight: 700; color: var(--cor-primaria); margin: 0; }
+.splash-text p { font-size: 1rem; color: var(--cor-texto-principal); margin: 4px 0 0; }
+@keyframes fadeInSplash { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+/* =================================================================== */
+/* 6. ESTILOS DE LOGIN E CADASTRO                                      */
+/* =================================================================== */
+
+.auth-container { 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    width: 100vw; 
+    height: 100vh; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 9000;
+}
+.auth-container-content {
+    width: 100%; max-width: 450px; padding: 30px; background-color: var(--cor-app-bar); border-radius: 12px; box-shadow: 0 4px 20px var(--cor-sombra); box-sizing: border-box; margin: 20px; overflow: hidden; 
+}
+.form-container { text-align: center; width: 100%; }
+.auth-logo { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; }
+.form-container h1 { font-size: 1.8rem; font-weight: 700; color: var(--cor-primaria); margin: 0 0 5px 0; }
+.form-container p { font-size: 1rem; color: var(--cor-texto-secundario); margin-bottom: 25px; }
+.form-group { margin-bottom: 15px; text-align: left; }
+.form-group-row { display: flex; gap: 15px; width: 100%; flex-wrap: wrap; }
+.form-group-row .form-group { flex-grow: 1; min-width: 150px; }
+.form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: var(--cor-texto-principal); }
+.form-group input,
+.form-group select { width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--cor-sombra); background-color: var(--cor-input-fundo); color: var(--cor-texto-principal); font-size: 1rem; box-sizing: border-box; transition: all 0.3s ease; }
+.form-group input:focus,
+.form-group select:focus { outline: none; border-color: var(--cor-input-borda-foco); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-input-borda-foco) 20%, transparent); }
+.auth-button { width: 100%; padding: 14px; border: none; border-radius: 8px; background-color: var(--cor-btn-fundo); color: var(--cor-btn-icone); font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s ease-in-out; margin-top: 10px; }
+.auth-button:hover { background-color: var(--cor-secundaria); }
+.toggle-link { font-size: 0.9rem; margin-top: 20px; color: var(--cor-texto-secundario); }
+.toggle-link a { color: var(--cor-primaria); font-weight: 500; text-decoration: none; cursor: pointer; }
+.toggle-link a:hover { text-decoration: underline; }
+.error-message { color: var(--cor-erro); font-size: 0.9rem; margin-top: 10px; display: none; }
+
+/* Estilos do "Olhinho" de Senha */
+.form-group-password {
+    position: relative;
+}
+.form-group-password input {
+    padding-right: 45px; 
+}
+.password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(calc(-50% + 7px)); 
+    width: 24px;
+    height: 24px;
+    fill: var(--cor-texto-secundario);
+    cursor: pointer;
+    transition: fill 0.2s ease;
+}
+.password-toggle-icon:hover {
+    fill: var(--cor-primaria);
+}
+
+/* Estilos do Formulário em Etapas */
+#register-form { overflow: hidden; }
+.register-step { display: none; width: 100%; }
+.register-step.active { display: block; animation: stepFadeIn 0.4s ease-out; }
+@keyframes stepFadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+.step-indicator { font-size: 0.9rem; font-weight: 500; color: var(--cor-texto-secundario); margin-bottom: 20px; }
+.step-nav-buttons { display: flex; gap: 10px; margin-top: 15px; }
+.step-nav-buttons .auth-button { flex: 1; }
+.auth-button.secondary { background-color: var(--cor-input-fundo); color: var(--cor-texto-principal); font-weight: 500; }
+.auth-button.secondary:hover { background-color: color-mix(in srgb, var(--cor-sombra) 20%, transparent); }
+
+/* Botão de Perigo */
+.auth-button.danger {
+    background-color: var(--cor-perigo);
+}
+.auth-button.danger:hover {
+    background-color: var(--cor-perigo-hover);
+}
+
+
+/* =================================================================== */
+/* 7. ESTILOS DO MODAL DE SOBREPOSIÇÃO (Corrigido)                     */
+/* =================================================================== */
+.modal-overlay { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+    background-color: rgba(0, 0, 0, 0.6); 
+    display: flex; justify-content: center; align-items: center; 
+    /* *** CORREÇÃO AQUI: z-index aumentado para 10000 *** */
+    z-index: 10000; 
+    -webkit-backdrop-filter: blur(5px); 
+    backdrop-filter: blur(5px); 
+    opacity: 0; 
+    visibility: hidden; 
+    transition: opacity 0.3s ease, visibility 0.3s ease; 
+}
+.modal-overlay.visible { opacity: 1; visibility: visible; }
+.modal-card { 
+    background-color: var(--cor-app-bar); 
+    padding: 25px 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 5px 25px rgba(0,0,0,0.2); 
+    max-width: 400px; 
+    width: 90%; 
+    text-align: center; 
+    transform: scale(0.9); 
+    transition: transform 0.3s ease; 
+}
+.modal-overlay.visible .modal-card { transform: scale(1); }
+.modal-card h2 { margin: 0 0 10px; font-weight: 700; }
+.modal-card p { margin: 0 0 20px; font-size: 1rem; color: var(--cor-texto-secundario); line-height: 1.5; }
+.modal-card.success h2 { color: var(--cor-secundaria); }
+.modal-card.error h2 { color: var(--cor-erro); }
+#modal-close-btn { width: auto; padding: 12px 30px; margin-top: 0; }
+
+/* Estilos do Modal de Perfil */
+.profile-modal-card {
+    max-width: 450px;
+}
+.profile-info {
+    margin-bottom: 25px;
+}
+.profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid var(--cor-primaria);
+}
+.profile-info h3 {
+    margin: 0 0 5px;
+    color: var(--cor-texto-principal);
+}
+.profile-info p {
+    margin: 4px 0;
+    color: var(--cor-texto-secundario);
+    font-size: 0.95rem;
+}
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* =================================================================== */
+/* 8. AJUSTES RESPONSIVOS (Media Queries)                              */
+/* =================================================================== */
+
+@media (max-width: 767px) {
+    .history-sidebar {
+        display: none;
+    }
+    .chat-container {
+        border-radius: 0;
+        height: 100vh;
+        max-height: none;
+    }
+    .app-bar .logo-container {
+        display: block;
+    }
+}
+
+
+@media (min-width: 768px) {
+    body { 
+        background-image: url('assets/background.png'); 
+        background-size: cover; 
+        background-position: center center; 
+        background-repeat: no-repeat; 
+        background-attachment: fixed; 
+    }
+    .app-layout {
+        width: 100%;
+        max-width: 1200px;
+        height: 90vh;
+        max-height: 800px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--cor-texto-principal) 10%, transparent);
+        box-shadow: 0 4px 20px var(--cor-sombra);
+    }
+    
+    .chat-container {
+        width: 100%; 
+        height: 100%;
+        border-radius: 0;
+    }
+    
+    .auth-container { 
+        background-color: transparent;
+    }
+    .auth-container-content {
+         margin: 0;
+    }
+    
+    .form-group-row .form-group { min-width: 0; }
 }

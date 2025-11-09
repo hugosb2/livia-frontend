@@ -1,33 +1,563 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- CÓDIGO DA SPLASH SCREEN ---
+
+    // ===================================================================
+    // 1. CONSTANTES E SELEÇÃO DE ELEMENTOS
+    // ===================================================================
+
+    // ATENÇÃO: Mude esta URL para a URL do seu backend no Vercel
+    const API_BASE_URL = 'https://livia-backend2.vercel.app'; 
+
+    const CHATBASE_API_KEY = '90e6f396-068b-4d57-98ec-a183ed62a668'; 
+    const CHATBASE_CHATBOT_ID = 'FPu7VxPsgVWNcXdEIDO8i';
+    const CHATBASE_URL = 'https://www.chatbase.co/api/v1/chat';
+
+    const REGEX_SIAPE = /^\d{7}$/; 
+    const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/; 
+
     const splashScreen = document.getElementById('splash-screen');
-    if (splashScreen) {
-        // Esconde a splash screen após 2.5 segundos
-        setTimeout(() => {
-            splashScreen.classList.add('hidden');
-        }, 2500); // 2.5 segundos
-    }
-    // --- FIM DO CÓDIGO DA SPLASH SCREEN ---
+    const authContainer = document.getElementById('auth-container');
+    const appLayout = document.getElementById('app-layout'); 
+
+    const loginFormContainer = document.getElementById('login-form-container');
+    const loginForm = document.getElementById('login-form');
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginError = document.getElementById('login-error');
+    
+    const registerFormContainer = document.getElementById('register-form-container');
+    const registerForm = document.getElementById('register-form');
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+
+    const registerSteps = document.querySelectorAll('.register-step');
+    const btnNext1 = document.getElementById('btn-next-1');
+    const btnPrev2 = document.getElementById('btn-prev-2');
+    const btnNext2 = document.getElementById('btn-next-2');
+    const btnPrev3 = document.getElementById('btn-prev-3');
+
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalCard = document.getElementById('modal-card');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    const profileModal = document.getElementById('profile-modal');
+    const btnProfile = document.getElementById('btn-profile');
+    const profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
+    const profileBtnLogout = document.getElementById('profile-btn-logout');
+
+    const toggleLoginPass = document.getElementById('toggle-login-pass');
+    const toggleRegPass = document.getElementById('toggle-reg-pass');
+    const toggleRegConfirm = document.getElementById('toggle-reg-confirm');
+    const regPassInput = document.getElementById('reg-password');
+    const regConfirmInput = document.getElementById('reg-password-confirm');
+    
+    const eyeIconPath = "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
+    const eyeOffIconPath = "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zM11.84 9.02l3.15 3.15c.02-.16.03-.33.03-.5 0-1.66-1.34-3-3-3-.17 0-.34.01-.5.03z";
 
     const chatDisplay = document.getElementById('chat-display');
     const perguntaInput = document.getElementById('pergunta-input');
     const btnPerguntar = document.getElementById('btn-perguntar');
-    
-    // URL CORRETA: Apenas a base da API
-    const apiUrl = 'https://livia-backend.onrender.com';
+    const btnLogout = document.getElementById('btn-logout');
 
-    const view = {
-        addMessage: (text, sender) => {
+    const historyList = document.getElementById('history-list');
+    const btnNewChat = document.getElementById('btn-new-chat');
+
+    let conversationHistory = []; 
+    let currentConversationId = null; 
+    let conversations = []; 
+    let currentRegisterStep = 1;
+    let isSuccessModal = false;
+
+    // ===================================================================
+    // 2. LÓGICA DO MODAL (Mensagem e Perfil)
+    // ===================================================================
+
+    function showModal(title, message, isSuccess = true) {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        isSuccessModal = isSuccess; 
+
+        if (isSuccess) {
+            modalCard.classList.add('success');
+            modalCard.classList.remove('error');
+        } else {
+            modalCard.classList.add('error');
+            modalCard.classList.remove('success');
+        }
+        
+        modalOverlay.classList.add('visible');
+    }
+
+    function hideModal() {
+        modalOverlay.classList.remove('visible');
+        if (isSuccessModal) {
+            showLoginLink.click();
+            isSuccessModal = false; 
+        }
+    }
+
+    modalCloseBtn.addEventListener('click', hideModal);
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) hideModal();
+    });
+
+    function showProfileModal() {
+        const user = getStoredUser();
+        if (user) {
+            document.getElementById('profile-name').textContent = `${user.first_name} ${user.last_name}`;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('profile-username').textContent = `Matrícula/SIAPE: ${user.username}`;
+        }
+        profileModal.classList.add('visible');
+    }
+
+    function hideProfileModal() {
+        profileModal.classList.remove('visible');
+    }
+
+    btnProfile.addEventListener('click', showProfileModal);
+    profileModalCloseBtn.addEventListener('click', hideProfileModal);
+    profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal) hideProfileModal();
+    });
+
+    profileBtnLogout.addEventListener('click', () => {
+        hideProfileModal();
+        handleLogout();
+    });
+
+    // ===================================================================
+    // 3. (ATUALIZADO) LÓGICA DE AUTENTICAÇÃO (Backend)
+    // ===================================================================
+
+    // --- Helpers de Armazenamento Local ---
+    function storeToken(token) {
+        localStorage.setItem('livia_token', token);
+    }
+    function getToken() {
+        return localStorage.getItem('livia_token');
+    }
+    function storeUser(user) {
+        localStorage.setItem('livia_user', JSON.stringify(user));
+    }
+    function getStoredUser() {
+        const user = localStorage.getItem('livia_user');
+        return user ? JSON.parse(user) : null;
+    }
+    function clearAuthData() {
+        localStorage.removeItem('livia_token');
+        localStorage.removeItem('livia_user');
+    }
+
+    // --- Função Central de API Fetch (COM CORREÇÃO) ---
+    async function apiFetch(endpoint, options = {}) {
+        const token = getToken();
+        
+        const headers = new Headers(options.headers || {});
+        headers.append('Content-Type', 'application/json');
+        if (token) {
+            headers.append('Authorization', `Bearer ${token}`);
+        }
+
+        options.headers = headers;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
+
+            // *** A CORREÇÃO ESTÁ AQUI ***
+            const isAuthRoute = (endpoint === '/login' || endpoint === '/register' || endpoint === '/validate-user');
+
+            if (response.status === 401) {
+                if (isAuthRoute) {
+                    // Se for 401 numa rota de auth, é "Credencial Inválida".
+                    // Apenas retorne a resposta para o formulário tratar.
+                    return response;
+                }
+                
+                if (getToken()) {
+                    // Se for 401, E temos um token, E NÃO é uma rota de auth,
+                    // significa que a sessão expirou.
+                    handleLogout();
+                    showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
+                    return Promise.reject(new Error('Sessão expirada.'));
+                }
+            }
+            
+            return response;
+        } catch (error) {
+            // Pega erros de rede (ex: "Failed to fetch")
+            console.error('Fetch Error:', error);
+            showModal('Erro de Rede', 'Não foi possível conectar ao servidor. Verifique sua internet.', false);
+            return Promise.reject(new Error('Erro de Rede'));
+        }
+    }
+
+    // --- Lógica do "Olhinho" de Senha ---
+    function togglePasswordVisibility(input, icon) {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.querySelector('path').setAttribute('d', isPassword ? eyeOffIconPath : eyeIconPath);
+    }
+    
+    toggleLoginPass.addEventListener('click', () => togglePasswordVisibility(loginPasswordInput, toggleLoginPass));
+    toggleRegPass.addEventListener('click', () => togglePasswordVisibility(regPassInput, toggleRegPass));
+    toggleRegConfirm.addEventListener('click', () => togglePasswordVisibility(regConfirmInput, toggleRegConfirm));
+
+    // --- Alternar entre formulários ---
+    showRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginFormContainer.style.display = 'none';
+        registerFormContainer.style.display = 'block';
+        currentRegisterStep = 1; 
+        showRegisterStep(currentRegisterStep);
+    });
+
+    showLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerFormContainer.style.display = 'none';
+        loginFormContainer.style.display = 'block';
+    });
+
+    // --- Lógica de Login (Chama nosso Backend) ---
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loginError.style.display = 'none';
+        const email = loginEmailInput.value;
+        const password = loginPasswordInput.value;
+
+        try {
+            const response = await apiFetch('/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Agora, o 401 (Credenciais Inválidas) será tratado aqui
+                throw new Error(data.message || 'Erro desconhecido');
+            }
+            
+            storeToken(data.access_token);
+            storeUser(data.user);
+            
+            initApp();
+        } catch (error) {
+            // Ignora erros de rede/sessão que o apiFetch já tratou
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                loginError.textContent = `Erro: ${error.message}`;
+                loginError.style.display = 'block';
+            }
+        }
+    });
+
+    // --- Lógica de Navegação das Etapas ---
+    function showRegisterStep(stepNum) {
+        registerSteps.forEach((step, index) => {
+            step.classList.toggle('active', (index + 1) === stepNum);
+        });
+    }
+
+    function validateFields(fieldIds) {
+        for (const id of fieldIds) {
+            const field = document.getElementById(id);
+            if (!field.value.trim()) {
+                showModal('Campo Obrigatório', `Por favor, preencha o campo "${field.labels[0].textContent}".`, false);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    btnNext1.addEventListener('click', () => {
+        if (validateFields(['reg-first-name', 'reg-last-name', 'reg-email'])) {
+            currentRegisterStep = 2;
+            showRegisterStep(currentRegisterStep);
+        }
+    });
+
+    btnPrev2.addEventListener('click', () => {
+        currentRegisterStep = 1;
+        showRegisterStep(currentRegisterStep);
+    });
+
+    // --- Etapa 2 -> Etapa 3 (com Validação) ---
+    btnNext2.addEventListener('click', async () => {
+        if (!validateFields(['reg-user-type', 'reg-username'])) return;
+
+        const userType = document.getElementById('reg-user-type').value;
+        const username = document.getElementById('reg-username').value.trim();
+        
+        if (userType === 'aluno' && !REGEX_MATRICULA.test(username)) {
+            showModal('Formato Inválido', 'A matrícula de aluno parece estar em um formato incorreto. Ex: 20241ITA01GB0014', false);
+            return;
+        }
+        if (userType === 'servidor' && !REGEX_SIAPE.test(username)) {
+            showModal('Formato Inválido', 'O SIAPE deve conter 7 números. Ex: 2887499', false);
+            return;
+        }
+
+        btnNext2.disabled = true;
+        btnNext2.textContent = 'Verificando...';
+
+        try {
+            const response = await apiFetch('/validate-user', {
+                method: 'POST',
+                body: JSON.stringify({ username: username, user_type: userType })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            currentRegisterStep = 3;
+            showRegisterStep(currentRegisterStep);
+
+        } catch (error) {
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                showModal('Validação Falhou', error.message, false);
+            }
+        } finally {
+            btnNext2.disabled = false;
+            btnNext2.textContent = 'Próximo';
+        }
+    });
+
+    btnPrev3.addEventListener('click', () => {
+        currentRegisterStep = 2;
+        showRegisterStep(currentRegisterStep);
+    });
+
+    // --- Lógica de Cadastro (Chama nosso Backend) ---
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!validateFields(['reg-password', 'reg-password-confirm'])) return;
+
+        const password = regPassInput.value;
+        const passwordConfirm = regConfirmInput.value;
+
+        if (password !== passwordConfirm) {
+            showModal('Erro na Senha', 'As senhas não conferem. Por favor, tente novamente.', false);
+            return;
+        }
+
+        const userData = {
+            first_name: document.getElementById('reg-first-name').value,
+            last_name: document.getElementById('reg-last-name').value,
+            email: document.getElementById('reg-email').value,
+            user_type: document.getElementById('reg-user-type').value,
+            username: document.getElementById('reg-username').value,
+            password: password,
+        };
+
+        try {
+            const response = await apiFetch('/register', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Erro desconhecido');
+            
+            showModal('Cadastro Realizado!', data.message + ' Você já pode fazer login.', true);
+            registerForm.reset(); 
+            
+        } catch (error) {
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                showModal('Erro no Cadastro', error.message, false);
+            }
+        }
+    });
+
+    // --- Lógica de Logout ---
+    const handleLogout = () => {
+        clearAuthData();
+        chatDisplay.innerHTML = '';
+        conversationHistory = [];
+        conversations = [];
+        currentConversationId = null;
+        initApp();
+    };
+    btnLogout.addEventListener('click', handleLogout); 
+
+
+    // ===================================================================
+    // 4. LÓGICA DE HISTÓRICO DE CONVERSAS (Backend)
+    // ===================================================================
+
+    async function loadConversations() {
+        try {
+            const response = await apiFetch('/history');
+            if (!response.ok) throw new Error('Falha ao carregar histórico');
+            conversations = await response.json();
+            renderHistoryList();
+            
+            if (!currentConversationId && conversations.length > 0) {
+                selectConversation(conversations[0].id);
+            } else if (!currentConversationId && conversations.length === 0) {
+                startNewChat();
+            }
+        } catch (error) {
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                console.error(error);
+                showModal('Erro de Rede', error.message, false);
+            }
+        }
+    }
+
+    function renderHistoryList() {
+        historyList.innerHTML = '';
+        if (conversations.length === 0) {
+            historyList.innerHTML = '<p class="history-empty">Nenhuma conversa iniciada.</p>';
+            return;
+        }
+
+        conversations.forEach(convo => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = `history-item ${convo.id === currentConversationId ? 'active' : ''}`;
+            item.dataset.id = convo.id;
+            
+            item.innerHTML = `
+                <span class="history-item-title">${convo.title}</span>
+                <span class="history-item-actions">
+                    <button class="history-item-btn delete" title="Apagar conversa">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+                    </button>
+                </span>
+            `;
+            
+            item.querySelector('.history-item-title').addEventListener('click', (e) => {
+                e.preventDefault();
+                selectConversation(convo.id);
+            });
+
+            item.querySelector('.history-item-btn.delete').addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await deleteConversation(convo.id);
+            });
+
+            historyList.appendChild(item);
+        });
+    }
+
+    async function startNewChat() {
+        currentConversationId = null; 
+        conversationHistory = []; 
+        
+        renderChatMessages(); 
+        chatController.initChat(); 
+        renderHistoryList(); 
+    }
+
+    function selectConversation(convId) {
+        if (convId === currentConversationId) return; 
+
+        const convo = conversations.find(c => c.id === convId);
+        if (!convo) return;
+        
+        currentConversationId = convId;
+        conversationHistory = convo.messages || [];
+        
+        renderChatMessages();
+        chatView.setInputState(true);
+        renderHistoryList(); 
+    }
+
+    async function deleteConversation(convId) {
+        if (!confirm('Tem certeza de que deseja apagar esta conversa?')) return;
+        
+        try {
+            const response = await apiFetch(`/history/${convId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Falha ao apagar conversa');
+
+            conversations = conversations.filter(c => c.id !== convId);
+            
+            if (convId === currentConversationId) {
+                startNewChat();
+            } else {
+                renderHistoryList();
+            }
+        } catch (error) {
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                console.error(error);
+                showModal('Erro de Rede', error.message, false);
+            }
+        }
+    }
+
+    async function saveConversation() {
+        if (conversationHistory.length < 2) return; 
+        
+        let title = conversationHistory.find(m => m.role === 'user')?.content.substring(0, 30) + '...';
+
+        const body = {
+            title: title,
+            messages: conversationHistory 
+        };
+
+        try {
+            let response;
+            if (currentConversationId) {
+                response = await apiFetch(`/history/${currentConversationId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(body)
+                });
+            } else {
+                response = await apiFetch('/history', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                });
+            }
+            
+            if (!response.ok) throw new Error('Falha ao salvar conversa');
+            
+            const savedConvo = await response.json();
+            
+            if (!currentConversationId) {
+                currentConversationId = savedConvo[0].id;
+            }
+            
+            await loadConversations();
+            
+        } catch (error) {
+            if (error.message !== 'Erro de Rede' && error.message !== 'Sessão expirada.') {
+                console.error('Erro ao salvar conversa:', error);
+                showModal('Erro', 'Não foi possível salvar seu histórico.', false);
+            }
+        }
+    }
+
+
+    function renderChatMessages() {
+        chatDisplay.innerHTML = '';
+        conversationHistory.forEach(message => {
+            chatView.addMessage(message.content, message.role, false); 
+        });
+        chatView.scrollToBottom();
+    }
+
+    btnNewChat.addEventListener('click', startNewChat);
+
+
+    // ===================================================================
+    // 5. LÓGICA DO CHATBOT (Chatbase)
+    // ===================================================================
+
+    const chatView = {
+        addMessage: (text, sender, animate = true) => {
             const messageElement = document.createElement('div');
             messageElement.classList.add('chat-message');
-            
+            if (!animate) messageElement.style.animation = 'none'; 
+
             const avatar = document.createElement('div');
             avatar.classList.add('avatar');
-
             const bubble = document.createElement('div');
             bubble.classList.add('message-bubble');
             bubble.innerHTML = marked.parse(text);
-
             if (sender === 'user') {
                 messageElement.classList.add('user-message');
                 messageElement.appendChild(bubble);
@@ -38,28 +568,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageElement.appendChild(bubble);
             }
             chatDisplay.appendChild(messageElement);
-            view.scrollToBottom();
+            chatView.scrollToBottom();
         },
         showTypingIndicator: () => {
             const typingElement = document.createElement('div');
             typingElement.id = 'typing-indicator';
             typingElement.classList.add('chat-message', 'livia-message');
-            typingElement.innerHTML = `
-                <div class="avatar"><img src="./assets/perfil.png" alt="LivIA"></div>
-                <div class="message-bubble">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                </div>
-            `;
+            typingElement.innerHTML = `<div class="avatar"><img src="./assets/perfil.png" alt="LivIA"></div><div class="message-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
             chatDisplay.appendChild(typingElement);
-            view.scrollToBottom();
+            chatView.scrollToBottom();
         },
         removeTypingIndicator: () => {
             const indicator = document.getElementById('typing-indicator');
-            if (indicator) {
-                indicator.remove();
-            }
+            if (indicator) indicator.remove();
         },
         setInputState: (enabled) => {
             perguntaInput.disabled = !enabled;
@@ -72,69 +593,100 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const chatApiService = {
-        start: async () => {
-            // Requisição para a URL correta: https://livia-backend.onrender.com/asks/start
-            const response = await fetch(`${apiUrl}/start`);
-            if (!response.ok) throw new Error('Falha ao iniciar a conversa.');
-            return response.json();
-        },
-        sendMessage: async (question) => {
-            // Requisição para a URL correta: https://livia-backend.onrender.com/asks/chat
-            const response = await fetch(`${apiUrl}/chat`, {
+        sendMessage: async (messages) => {
+            const response = await fetch(CHATBASE_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question }),
+                headers: {
+                    'Authorization': `Bearer ${CHATBASE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: messages,
+                    chatbotId: CHATBASE_CHATBOT_ID,
+                }),
             });
-            if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
-            return response.json();
+            if (!response.ok) {
+                 const errorBody = await response.text();
+                 throw new Error(`Erro na API: ${response.statusText} - ${errorBody}`);
+            }
+            const data = await response.json();
+            return { response: data.text };
         }
     };
 
-    const controller = {
+    const chatController = {
         handleSendMessage: async () => {
             const question = perguntaInput.value.trim();
             if (!question) return;
 
-            view.addMessage(question, 'user');
+            chatView.addMessage(question, 'user');
             perguntaInput.value = '';
-            view.setInputState(false);
-            view.showTypingIndicator();
-
+            chatView.setInputState(false);
+            chatView.showTypingIndicator();
+            
+            conversationHistory.push({ content: question, role: 'user' });
+            
             try {
-                const data = await chatApiService.sendMessage(question);
-                view.removeTypingIndicator();
-                view.addMessage(data.response, 'livia');
+                const data = await chatApiService.sendMessage(conversationHistory);
+                conversationHistory.push({ content: data.response, role: 'assistant' });
+                chatView.removeTypingIndicator();
+                chatView.addMessage(data.response, 'livia');
+
+                await saveConversation(); 
+
             } catch (error) {
-                console.error('Falha ao comunicar com o backend:', error);
-                view.removeTypingIndicator();
-                view.addMessage('**Ops!** Ocorreu um erro. Por favor, tente novamente mais tarde.', 'livia');
+                console.error('Falha ao comunicar com o Chatbase:', error);
+                chatView.removeTypingIndicator();
+                const errorMsg = '**Ops!** Ocorreu um erro ao me comunicar. Por favor, tente novamente mais tarde.';
+                chatView.addMessage(errorMsg, 'livia');
             } finally {
-                view.setInputState(true);
+                chatView.setInputState(true);
             }
         },
-        init: async () => {
-            view.setInputState(false);
-            view.showTypingIndicator();
-            try {
-                const data = await chatApiService.start();
-                view.removeTypingIndicator();
-                view.addMessage(data.response, 'livia');
-                view.setInputState(true);
-            } catch (error) {
-                console.error('Falha ao iniciar:', error);
-                view.removeTypingIndicator();
-                view.addMessage('**Erro de Conexão**: Não consegui me conectar. Verifique o backend e recarregue a página.', 'livia');
+        initChat: () => {
+            if (conversationHistory.length === 0) { 
+                const welcomeMessage = "Olá! Eu sou a LivIA, a assistente virtual do IF Baiano - Campus Itapetinga. Como posso te ajudar hoje?";
+                chatView.addMessage(welcomeMessage, 'livia', false);
+                conversationHistory.push({ content: welcomeMessage, role: 'assistant' });
+                chatView.setInputState(true);
             }
         }
     };
 
-    btnPerguntar.addEventListener('click', controller.handleSendMessage);
+    btnPerguntar.addEventListener('click', chatController.handleSendMessage);
     perguntaInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            controller.handleSendMessage();
+            chatController.handleSendMessage();
         }
     });
-    
-    controller.init();
+
+    // ===================================================================
+    // 6. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
+    // ===================================================================
+
+    function initApp() {
+        const token = getToken();
+
+        if (!token) {
+            splashScreen.classList.add('hidden');
+            appLayout.style.display = 'none'; 
+            authContainer.style.display = 'flex'; 
+            loginFormContainer.style.display = 'block';
+            registerFormContainer.style.display = 'none';
+        } else {
+            authContainer.style.display = 'none'; 
+            appLayout.style.display = 'flex'; 
+            
+            if (splashScreen) {
+                setTimeout(() => {
+                    splashScreen.classList.add('hidden');
+                }, 2500); 
+            }
+            
+            loadConversations();
+        }
+    }
+
+    initApp();
 });

@@ -6,16 +6,17 @@
     <title>LivIA - Assistente Virtual</title>
     
     <link rel="icon" href="assets/perfil.png" type="image/png">
-
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="splash.css">
-    <link href=https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div id="splash-screen">
         <div class="splash-content">
-            <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="splash-logo">
+            <picture>
+                <source srcset="assets/ifbaiano-light.png" media="(prefers-color-scheme: dark)">
+                <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="splash-logo">
+            </picture>
             <div class="splash-text">
                 <h1><b>LivIA</b></h1>
                 <p>Assistente Virtual do Campus Itapetinga</p>
@@ -23,29 +24,175 @@
         </div>
     </div>
 
-    <div class="chat-container">
-        <header class="app-bar">
-            <div class="header-left">
-                <img src="assets/perfil.png" alt="Avatar LivIA" class="header-avatar">
-                <div class="header-text">
-                    <h1><b>LivIA</b></h1>
-                    <p class="subtitle">Assistente Virtual do Campus Itapetinga</p>
-                </div>
+    <div id="auth-container" class="auth-container" style="display: none;">
+        
+        <div class="auth-container-content">
+
+            <div id="login-form-container" class="form-container">
+                <img src="assets/perfil.png" alt="Logo LivIA" class="auth-logo">
+                <h1>Login - LivIA</h1>
+                <p>Assistente Virtual do Campus Itapetinga</p>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">E-mail</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group form-group-password">
+                        <label for="login-password">Senha</label>
+                        <input type="password" id="login-password" required>
+                        <svg id="toggle-login-pass" class="password-toggle-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    </div>
+                    <button type="submit" class="auth-button">Entrar</button>
+                    <p class="toggle-link">Não tem uma conta? <a href="#" id="show-register">Cadastre-se</a></p>
+                    <p id="login-error" class="error-message"></p>
+                </form>
             </div>
-            <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="logo">
-        </header>
+
+            <div id="register-form-container" class="form-container" style="display:none;">
+                <img src="assets/perfil.png" alt="Logo LivIA" class="auth-logo">
+                <h1>Cadastro - LivIA</h1>
+                <p>Crie sua conta de acesso</p>
+                
+                <form id="register-form">
+                    
+                    <div class="register-step active" id="register-step-1">
+                        <p class="step-indicator">Etapa 1 de 3: Dados Pessoais</p>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="reg-first-name">Nome</label>
+                                <input type="text" id="reg-first-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-last-name">Sobrenome</label>
+                                <input type="text" id="reg-last-name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-email">E-mail</label>
+                            <input type="email" id="reg-email" required>
+                        </div>
+                        <button type="button" id="btn-next-1" class="auth-button">Próximo</button>
+                    </div>
+
+                    <div class="register-step" id="register-step-2">
+                        <p class="step-indicator">Etapa 2 de 3: Vínculo</p>
+                        <div class="form-group">
+                            <label for="reg-user-type">Eu sou</label>
+                            <select id="reg-user-type" required>
+                                <option value="">Selecione...</option>
+                                <option value="aluno">Aluno</option>
+                                <option value="servidor">Servidor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-username">Matrícula (Aluno) ou SIAPE (Servidor)</label>
+                            <input type="text" id="reg-username" required>
+                        </div>
+                        <div class="step-nav-buttons">
+                            <button type="button" id="btn-prev-2" class="auth-button secondary">Voltar</button>
+                            <button type="button" id="btn-next-2" class="auth-button">Próximo</button>
+                        </div>
+                    </div>
+                    
+                    <div class="register-step" id="register-step-3">
+                        <p class="step-indicator">Etapa 3 de 3: Segurança</p>
+                        <div class="form-group form-group-password">
+                            <label for="reg-password">Senha</label>
+                            <input type="password" id="reg-password" required>
+                            <svg id="toggle-reg-pass" class="password-toggle-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </div>
+                        <div class="form-group form-group-password">
+                            <label for="reg-password-confirm">Confirmar Senha</label>
+                            <input type="password" id="reg-password-confirm" required>
+                            <svg id="toggle-reg-confirm" class="password-toggle-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </div>
+                        <div class="step-nav-buttons">
+                            <button type="button" id="btn-prev-3" class="auth-button secondary">Voltar</button>
+                            <button type="submit" class="auth-button">Finalizar Cadastro</button>
+                        </div>
+                    </div>
+
+                </form>
+                
+                <p class="toggle-link">Já tem uma conta? <a href="#" id="show-login">Faça login</a></p>
+            </div>
+
+        </div> </div>
+
+
+    <div id="app-layout" class="app-layout" style="display: none;">
         
-        <main id="chat-display" class="chat-display"></main>
-        
-        <footer class="input-row">
-            <input type="text" id="pergunta-input" placeholder="Faça sua pergunta..." disabled>
-            <button id="btn-perguntar" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                </svg>
-            </button>
-        </footer>
+        <aside id="history-sidebar" class="history-sidebar">
+            <header class="history-header">
+                <picture class="logo-container">
+                    <source srcset="assets/ifbaiano-light.png" media="(prefers-color-scheme: dark)">
+                    <img src="assets/ifbaiano.png" alt="Logo IF Baiano" class="logo">
+                </picture>
+                <button id="btn-new-chat" class="history-new-chat-btn" title="Nova Conversa">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h400v80H200v560h560v-400h80v400q0 33-23.5 56.5T760-120H200Zm280-360v-170l-55 55-55-55 140-140 140 140-55 55-55-55v170h-80Z"/></svg>
+                    <span>Nova Conversa</span>
+                </button>
+            </header>
+            <nav id="history-list" class="history-list">
+                </nav>
+        </aside>
+
+        <div id="chat-container" class="chat-container">
+            <header class="app-bar">
+                <div class="header-left">
+                    <img src="assets/perfil.png" alt="Avatar LivIA" class="header-avatar">
+                    <div class="header-text">
+                        <h1><b>LivIA</b></h1>
+                        <p class="subtitle">Assistente Virtual do Campus Itapetinga</p>
+                    </div>
+                </div>
+                
+                <button id="btn-profile" class="app-bar-icon-btn" title="Meu Perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q106-50 223-75t233 0q42 19 69 47.5T800-272v112H160Z"/></svg>
+                </button>
+                <button id="btn-logout" class="app-bar-icon-btn" title="Sair">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
+                </button>
+            </header>
+            <main id="chat-display" class="chat-display"></main>
+            <footer class="input-row">
+                <input type="text" id="pergunta-input" placeholder="Faça sua pergunta..." disabled>
+                <button id="btn-perguntar" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </footer>
+        </div>
+
+    </div> <div id="modal-overlay" class="modal-overlay">
+        <div id="modal-card" class="modal-card">
+            <h2 id="modal-title">Sucesso!</h2>
+            <p id="modal-message">Usuário cadastrado com sucesso!</p>
+            <button id="modal-close-btn" class="auth-button">OK</button>
+        </div>
     </div>
+
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-card profile-modal-card">
+            <h2>Meu Perfil</h2>
+            <p>Aqui você pode gerenciar os dados da sua conta.</p>
+            
+            <div class="profile-info">
+                <img src="assets/perfil.png" alt="Avatar" class="profile-avatar-large">
+                <h3 id="profile-name">Nome do Usuário</h3>
+                <p id="profile-email">email@usuario.com</p>
+                <p id="profile-username">Matrícula/SIAPE: 000000</p>
+            </div>
+
+            <div class="profile-actions">
+                <button id="profile-btn-edit" class="auth-button secondary">Editar Dados (Em breve)</button>
+                <button id="profile-btn-logout" class="auth-button secondary">Sair da Conta</button>
+                <button id="profile-btn-delete" class="auth-button danger">Excluir Conta (Em breve)</button>
+            </div>
+            
+            <button id="profile-modal-close-btn" class="auth-button">Fechar</button>
+        </div>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
