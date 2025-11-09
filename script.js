@@ -1,6 +1,43 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Carregado - Iniciando aplicação...');
 
+    // Adicionar eventos para ajustar a visualização quando o teclado virtual aparece/desaparece
+    if ('virtualKeyboard' in navigator) {
+        navigator.virtualKeyboard.overlaysContent = true;
+        navigator.virtualKeyboard.addEventListener('geometrychange', (event) => {
+            const { x, y, width, height } = event.target.boundingRect;
+            document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
+            adjustViewForKeyboard(height > 0);
+        });
+    } else {
+        // Fallback para dispositivos que não suportam a API VirtualKeyboard
+        window.visualViewport.addEventListener('resize', () => {
+            const keyboardHeight = window.innerHeight - window.visualViewport.height;
+            document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+            adjustViewForKeyboard(keyboardHeight > 0);
+        });
+    }
+
+    function adjustViewForKeyboard(isKeyboardVisible) {
+        const chatDisplay = document.getElementById('chat-display');
+        const inputRow = document.querySelector('.input-row');
+        
+        if (isKeyboardVisible) {
+            chatDisplay.style.height = `calc(100vh - var(--keyboard-height) - 80px - env(safe-area-inset-top))`;
+            inputRow.style.position = 'absolute';
+            inputRow.style.bottom = 'var(--keyboard-height)';
+        } else {
+            chatDisplay.style.height = '';
+            inputRow.style.position = 'sticky';
+            inputRow.style.bottom = '0';
+        }
+        
+        // Rolar para o fundo após um pequeno atraso para garantir que a UI foi atualizada
+        setTimeout(() => {
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }, 100);
+    }
+
     // ===================================================================
     // 1. CONSTANTES E SELEÇÃO DE ELEMENTOS
     // ===================================================================
