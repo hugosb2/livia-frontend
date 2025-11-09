@@ -1179,6 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----- CÓDIGO CORRIGIDO -----
+    // ----- CÓDIGO CORRIGIDO -----
     function hideProfileScreen() {
         console.log('Fechando tela de perfil...');
         
@@ -1197,13 +1198,28 @@ document.addEventListener('DOMContentLoaded', () => {
             appLayout.style.display = 'flex';
         }
 
-        // --- CORREÇÃO ADICIONADA ---
-        // Força a atualização do layout após a tela voltar.
-        // Isso corrige o input cortado.
-        setTimeout(() => {
-            updateForViewport();
-            chatView.scrollToBottom();
-        }, 50); // 50ms de delay para garantir que o 'display: flex' foi renderizado
+        // --- CORREÇÃO ROBUSTA (requestAnimationFrame) ---
+        // Espera o navegador estar pronto para desenhar o próximo frame.
+        requestAnimationFrame(() => {
+            // Às vezes, um rAF não é suficiente. Um timeout(0) força
+            // o código a rodar no final da fila de eventos, garantindo
+            // que o layout 'display: flex' já foi calculado.
+            setTimeout(() => {
+                console.log('Forçando reposicionamento do layout após perfil...');
+                
+                // Chama as funções de reposicionamento DIRETAMENTE.
+                // Isso é mais seguro do que chamar updateForViewport().
+                
+                // 1. Reposiciona o 'input-row' para o estado "teclado fechado".
+                resetPosition(); 
+                
+                // 2. Reposiciona o 'app-bar' (header).
+                updateHeaderPosition();
+                
+                // 3. Rola para o final.
+                chatView.scrollToBottom();
+            }, 0); // Delay de 0ms
+        });
     }
 
     // Event Listeners para a tela de perfil - COM VERIFICAÇÕES
