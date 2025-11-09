@@ -126,6 +126,13 @@ body {
     line-height: 1.6;
 }
 
+/* Restaurar centralização em telas maiores (desktop) */
+@media (min-width: 768px) {
+    body {
+        align-items: center;
+    }
+}
+
 /* =================================================================== */
 /* 2. LAYOUT DA APLICAÇÃO                                              */
 /* =================================================================== */

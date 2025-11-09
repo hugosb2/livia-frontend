@@ -849,46 +849,73 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.matchMedia('(max-width: 767px)').matches;
         if (!isMobile) return;
 
-        function updateForViewport() {
+        const chatDisplayEl = document.getElementById('chat-display');
+        if (!inputRow || !chatDisplayEl) return;
+
+        // small debounce helper
+        const debounce = (fn, wait = 80) => {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+        };
+
+        let lastKeyboardHeight = 0;
+        // use transform fallback on mobile to avoid some browser repaint/overlay quirks
+        const useTransform = true;
+
+        function applyPosition(keyboardHeight) {
+            inputRow.style.position = 'fixed';
+            inputRow.style.left = '0';
+            inputRow.style.right = '0';
+            inputRow.style.zIndex = '1400';
+
+            if (useTransform && keyboardHeight > 0) {
+                // keep inputRow anchored to bottom and translate it up - more stable on some browsers
+                inputRow.style.bottom = '0';
+                inputRow.style.transform = `translateY(-${keyboardHeight}px)`;
+                inputRow.style.transition = 'transform 160ms ease-out';
+            } else {
+                inputRow.style.transform = 'none';
+                inputRow.style.transition = '';
+                inputRow.style.bottom = keyboardHeight > 0 ? keyboardHeight + 'px' : 'calc(env(safe-area-inset-bottom))';
+            }
+
+            // reserve space at bottom of chat so messages are not hidden
+            chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + ${keyboardHeight}px + 24px)`;
+            // scroll to bottom to keep input context
+            setTimeout(() => { chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 90);
+            lastKeyboardHeight = keyboardHeight;
+        }
+
+        function resetPosition() {
+            inputRow.style.transform = 'none';
+            inputRow.style.transition = '';
+            inputRow.style.bottom = 'calc(env(safe-area-inset-bottom))';
+            inputRow.style.zIndex = '1200';
+            chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + env(safe-area-inset-bottom) + 24px)`;
+        }
+
+        function estimateKeyboardHeight() {
+            const vv = window.visualViewport;
+            let keyboardHeight = 0;
+            if (vv) {
+                keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+            } else {
+                keyboardHeight = Math.max(0, window.innerHeight - document.documentElement.clientHeight);
+            }
+            return keyboardHeight;
+        }
+
+        const updateForViewport = debounce(() => {
             try {
-                const vv = window.visualViewport;
-                const chatDisplayEl = document.getElementById('chat-display');
-                if (!inputRow || !chatDisplayEl) return;
-
-                let keyboardHeight = 0;
-                if (vv) {
-                    // keyboardHeight estimation
-                    keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
-                } else {
-                    // fallback: compare with layout viewport
-                    keyboardHeight = Math.max(0, window.innerHeight - document.documentElement.clientHeight);
-                }
-
-                if (keyboardHeight > 0) {
-                    // move input above keyboard
-                    inputRow.style.position = 'fixed';
-                    inputRow.style.left = '0';
-                    inputRow.style.right = '0';
-                    inputRow.style.bottom = keyboardHeight + 'px';
-                    inputRow.style.zIndex = '1300';
-
-                    // reserve space at bottom of chat so messages are not hidden
-                    chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + ${keyboardHeight}px + 24px)`;
-                    // scroll to bottom to keep input context
-                    setTimeout(() => { chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 80);
-                } else {
-                    // no keyboard: keep input fixed to safe-area bottom
-                    inputRow.style.position = 'fixed';
-                    inputRow.style.left = '0';
-                    inputRow.style.right = '0';
-                    inputRow.style.bottom = 'calc(env(safe-area-inset-bottom))';
-                    inputRow.style.zIndex = '1200';
-                    chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + env(safe-area-inset-bottom) + 24px)`;
+                const keyboardHeight = estimateKeyboardHeight();
+                // only apply if changed meaningfully
+                if (Math.abs(keyboardHeight - lastKeyboardHeight) > 2) {
+                    applyPosition(keyboardHeight);
                 }
             } catch (err) {
                 console.error('Erro ao ajustar visualViewport:', err);
             }
-        }
+        }, 60);
 
         // Bind events
         if (window.visualViewport) {
@@ -897,24 +924,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.addEventListener('resize', updateForViewport);
 
+        // Many mobile browsers change their UI on pointer/touch release; re-run update after release
+        function onPointerRelease() {
+            // run a couple times to cover browser UI animation windows
+            setTimeout(updateForViewport, 50);
+            setTimeout(updateForViewport, 220);
+        }
+
+        document.addEventListener('touchend', onPointerRelease, { passive: true });
+        document.addEventListener('pointerup', onPointerRelease);
+
         perguntaInput.addEventListener('focus', () => {
-            // run immediately and after a short delay to catch animation of keyboard
+            // run immediately and after short delays to catch keyboard animation
             updateForViewport();
-            setTimeout(updateForViewport, 200);
+            setTimeout(updateForViewport, 180);
+            setTimeout(updateForViewport, 400);
         });
 
         perguntaInput.addEventListener('blur', () => {
             // restore layout after keyboard hides
-            const chatDisplayEl = document.getElementById('chat-display');
-            if (inputRow) {
-                inputRow.style.position = 'fixed';
-                inputRow.style.bottom = 'calc(env(safe-area-inset-bottom))';
-                inputRow.style.zIndex = '1200';
-            }
-            if (chatDisplayEl) {
-                chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + env(safe-area-inset-bottom) + 24px)`;
-            }
-            setTimeout(() => { if (chatDisplayEl) chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 80);
+            resetPosition();
+            setTimeout(() => { chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 80);
         });
 
         // initial call to ensure correct layout
