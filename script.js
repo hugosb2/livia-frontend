@@ -849,8 +849,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.matchMedia('(max-width: 767px)').matches;
         if (!isMobile) return;
 
-        const chatDisplayEl = document.getElementById('chat-display');
-        if (!inputRow || !chatDisplayEl) return;
+    const chatDisplayEl = document.getElementById('chat-display');
+    const appBar = document.querySelector('.app-bar');
+    if (!inputRow || !chatDisplayEl) return;
+
+    // ensure appBar exists; if present we'll adjust its top to avoid being overlapped by browser chrome
+    const hasAppBar = !!appBar;
 
         // small debounce helper
         const debounce = (fn, wait = 80) => {
@@ -912,6 +916,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (Math.abs(keyboardHeight - lastKeyboardHeight) > 2) {
                     applyPosition(keyboardHeight);
                 }
+                // also adjust header position to account for address bar / visual viewport offset
+                try {
+                    if (hasAppBar) updateHeaderPosition();
+                } catch (err) {
+                    // ignore header adjustment errors
+                }
             } catch (err) {
                 console.error('Erro ao ajustar visualViewport:', err);
             }
@@ -933,6 +943,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.addEventListener('touchend', onPointerRelease, { passive: true });
         document.addEventListener('pointerup', onPointerRelease);
+
+        // Header adjustment: keep app-bar visible when browser chrome (address bar) is present
+        function updateHeaderPosition() {
+            if (!hasAppBar) return;
+            const vv = window.visualViewport;
+            const offset = vv ? (vv.offsetTop || 0) : 0;
+            // set header to fixed on mobile and push it down by the visualViewport offset plus safe-area
+            appBar.style.position = 'fixed';
+            appBar.style.left = '0';
+            appBar.style.right = '0';
+            appBar.style.zIndex = '1500';
+            // use calc to include safe-area inset if present
+            try {
+                appBar.style.top = `calc(env(safe-area-inset-top) + ${offset}px)`;
+            } catch (e) {
+                // fallback
+                appBar.style.top = `${offset}px`;
+            }
+            // ensure compositing for smoother transitions
+            appBar.style.transform = 'translateZ(0)';
+        }
+
+        // run header update after pointer release as well
+        document.addEventListener('touchend', () => setTimeout(updateHeaderPosition, 120), { passive: true });
+        document.addEventListener('pointerup', () => setTimeout(updateHeaderPosition, 120));
+
+        // update header on visualViewport events
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', debounce(updateHeaderPosition, 40));
+            window.visualViewport.addEventListener('scroll', debounce(updateHeaderPosition, 40));
+        }
+
+        // also run once when focusing the input
+        perguntaInput.addEventListener('focus', () => setTimeout(updateHeaderPosition, 60));
 
         perguntaInput.addEventListener('focus', () => {
             // run immediately and after short delays to catch keyboard animation
