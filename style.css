@@ -129,12 +129,20 @@ body {
 .history-sidebar {
     width: 280px;
     height: 100vh;
-    background-color: var(--sidebar-fundo);
+    background-color: rgba(255, 255, 255, 0.9);
     color: var(--sidebar-texto);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     border-right: 1px solid var(--sidebar-divider);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .history-sidebar {
+        background-color: rgba(26, 26, 26, 0.9);
+    }
 }
 
 .history-header {
@@ -143,7 +151,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background-color: var(--sidebar-fundo);
+    background-color: transparent;
 }
 
 .history-header .logo-container {
@@ -199,7 +207,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background-color: var(--sidebar-fundo);
+    background-color: transparent;
 }
 
 /* Scrollbar personalizada */
@@ -344,11 +352,17 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    background: var(--cor-app-bar);
+    background: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid var(--cor-input-borda);
     gap: 16px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .app-bar {
+        background: rgba(26, 26, 26, 0.9);
+    }
 }
 
 .header-left {
@@ -658,8 +672,16 @@ body {
     padding: 16px 24px;
     gap: 12px;
     align-items: center;
-    background-color: var(--cor-app-bar);
+    background-color: rgba(255, 255, 255, 0.9);
     border-top: 1px solid var(--cor-input-borda);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .input-row {
+        background-color: rgba(26, 26, 26, 0.9);
+    }
 }
 
 #pergunta-input {
@@ -808,10 +830,20 @@ body {
     width: 100%;
     max-width: 460px;
     padding: 32px;
-    background-color: var(--cor-card);
+    background-color: rgba(255, 255, 255, 0.95);
     border-radius: var(--radius-large);
     box-shadow: 0 8px 32px var(--cor-sombra-forte);
     margin: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+    .auth-container-content {
+        background-color: rgba(31, 31, 31, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 }
 
 .form-container {
@@ -1063,7 +1095,7 @@ body {
 }
 
 .modal-card {
-    background-color: var(--cor-card);
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 32px;
     border-radius: var(--radius-large);
     box-shadow: 0 12px 48px var(--cor-sombra-forte);
@@ -1072,6 +1104,16 @@ body {
     text-align: center;
     transform: scale(0.9) translateY(20px);
     transition: transform var(--transition-normal);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+    .modal-card {
+        background-color: rgba(31, 31, 31, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 }
 
 .modal-overlay.visible .modal-card {
@@ -1165,9 +1207,17 @@ body {
     align-items: center;
     gap: 16px;
     padding: 16px 24px;
-    background-color: var(--cor-app-bar);
+    background-color: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid var(--cor-input-borda);
     min-height: 80px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .profile-header {
+        background-color: rgba(26, 26, 26, 0.9);
+    }
 }
 
 .profile-back-btn {
@@ -1202,12 +1252,20 @@ body {
 }
 
 .profile-section {
-    background-color: var(--cor-app-bar);
+    background-color: rgba(255, 255, 255, 0.8);
     border-radius: var(--radius-large);
     padding: 24px;
     box-shadow: 0 2px 12px var(--cor-sombra);
     margin-bottom: 20px;
     border: 1px solid var(--cor-input-borda);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .profile-section {
+        background-color: rgba(31, 31, 31, 0.8);
+    }
 }
 
 .profile-section h2 {
@@ -1332,12 +1390,20 @@ body {
     left: -280px;
     width: 280px;
     height: 100vh;
-    background-color: var(--sidebar-fundo);
+    background-color: rgba(255, 255, 255, 0.95);
     z-index: 9999;
     transition: left var(--transition-normal);
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--sidebar-divider);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .mobile-sidebar {
+        background-color: rgba(26, 26, 26, 0.95);
+    }
 }
 
 .mobile-sidebar.visible {
@@ -1350,7 +1416,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--sidebar-fundo);
+    background-color: transparent;
 }
 
 .mobile-sidebar-header .logo-container {
@@ -1393,7 +1459,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background-color: var(--sidebar-fundo);
+    background-color: transparent;
 }
 
 .mobile-new-chat-btn {
@@ -1542,21 +1608,10 @@ body {
     
     .auth-container {
         background-color: transparent;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
     }
     
     .auth-container-content {
         margin: 0;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        background-color: rgba(255, 255, 255, 0.95);
-    }
-    
-    @media (prefers-color-scheme: dark) {
-        .auth-container-content {
-            background-color: rgba(31, 31, 31, 0.95);
-        }
     }
     
     .form-group-row .form-group {
@@ -1586,7 +1641,7 @@ body {
 /* Garantir que o mobile sidebar funcione no dark mode */
 @media (prefers-color-scheme: dark) {
     .mobile-sidebar {
-        background-color: var(--sidebar-fundo);
+        background-color: rgba(26, 26, 26, 0.95);
     }
     
     .mobile-sidebar-close {
