@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error('Erro ao ajustar visualViewport:', err);
             }
-        }, 60);
+        }, 10);
 
         // Bind events
         if (window.visualViewport) {
