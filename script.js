@@ -842,6 +842,85 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Ajustes para teclado virtual em mobile: garantir input visível acima do teclado
+    (function setupMobileKeyboardHandlers() {
+        if (!perguntaInput) return;
+        const inputRow = document.querySelector('.input-row');
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        if (!isMobile) return;
+
+        function updateForViewport() {
+            try {
+                const vv = window.visualViewport;
+                const chatDisplayEl = document.getElementById('chat-display');
+                if (!inputRow || !chatDisplayEl) return;
+
+                let keyboardHeight = 0;
+                if (vv) {
+                    // keyboardHeight estimation
+                    keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+                } else {
+                    // fallback: compare with layout viewport
+                    keyboardHeight = Math.max(0, window.innerHeight - document.documentElement.clientHeight);
+                }
+
+                if (keyboardHeight > 0) {
+                    // move input above keyboard
+                    inputRow.style.position = 'fixed';
+                    inputRow.style.left = '0';
+                    inputRow.style.right = '0';
+                    inputRow.style.bottom = keyboardHeight + 'px';
+                    inputRow.style.zIndex = '1300';
+
+                    // reserve space at bottom of chat so messages are not hidden
+                    chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + ${keyboardHeight}px + 24px)`;
+                    // scroll to bottom to keep input context
+                    setTimeout(() => { chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 80);
+                } else {
+                    // no keyboard: keep input fixed to safe-area bottom
+                    inputRow.style.position = 'fixed';
+                    inputRow.style.left = '0';
+                    inputRow.style.right = '0';
+                    inputRow.style.bottom = 'calc(env(safe-area-inset-bottom))';
+                    inputRow.style.zIndex = '1200';
+                    chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + env(safe-area-inset-bottom) + 24px)`;
+                }
+            } catch (err) {
+                console.error('Erro ao ajustar visualViewport:', err);
+            }
+        }
+
+        // Bind events
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateForViewport);
+            window.visualViewport.addEventListener('scroll', updateForViewport);
+        }
+        window.addEventListener('resize', updateForViewport);
+
+        perguntaInput.addEventListener('focus', () => {
+            // run immediately and after a short delay to catch animation of keyboard
+            updateForViewport();
+            setTimeout(updateForViewport, 200);
+        });
+
+        perguntaInput.addEventListener('blur', () => {
+            // restore layout after keyboard hides
+            const chatDisplayEl = document.getElementById('chat-display');
+            if (inputRow) {
+                inputRow.style.position = 'fixed';
+                inputRow.style.bottom = 'calc(env(safe-area-inset-bottom))';
+                inputRow.style.zIndex = '1200';
+            }
+            if (chatDisplayEl) {
+                chatDisplayEl.style.paddingBottom = `calc(var(--app-bar-height) + env(safe-area-inset-bottom) + 24px)`;
+            }
+            setTimeout(() => { if (chatDisplayEl) chatDisplayEl.scrollTop = chatDisplayEl.scrollHeight; }, 80);
+        });
+
+        // initial call to ensure correct layout
+        setTimeout(updateForViewport, 50);
+    })();
+
     // ===================================================================
     // 8. GERENCIAMENTO DA TELA DE PERFIL INTEGRADA - CORRIGIDO
     // ===================================================================
