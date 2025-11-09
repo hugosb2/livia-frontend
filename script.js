@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================================================
-    // 3. (ATUALIZADO) LÓGICA DE AUTENTICAÇÃO (Backend)
+    // 3. (CORRIGIDO) LÓGICA DE AUTENTICAÇÃO (Backend)
     // ===================================================================
 
     // --- Helpers de Armazenamento Local ---
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('livia_user');
     }
 
-    // --- Função Central de API Fetch (COM CORREÇÃO) ---
+    // --- Função Central de API Fetch (CORRIGIDA) ---
     async function apiFetch(endpoint, options = {}) {
         const token = getToken();
         
@@ -165,23 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
 
-            // *** A CORREÇÃO ESTÁ AQUI ***
+            // *** CORREÇÃO: Não tratar 401 em rotas de autenticação ***
             const isAuthRoute = (endpoint === '/login' || endpoint === '/register' || endpoint === '/validate-user');
-
-            if (response.status === 401) {
-                if (isAuthRoute) {
-                    // Se for 401 numa rota de auth, é "Credencial Inválida".
-                    // Apenas retorne a resposta para o formulário tratar.
-                    return response;
-                }
-                
-                if (getToken()) {
-                    // Se for 401, E temos um token, E NÃO é uma rota de auth,
-                    // significa que a sessão expirou.
-                    handleLogout();
-                    showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
-                    return Promise.reject(new Error('Sessão expirada.'));
-                }
+            
+            if (response.status === 401 && !isAuthRoute && getToken()) {
+                // Se for 401, E temos um token, E NÃO é uma rota de auth,
+                // significa que a sessão expirou.
+                handleLogout();
+                showModal('Sessão Expirada', 'Sua sessão expirou. Por favor, faça login novamente.', false);
+                return Promise.reject(new Error('Sessão expirada.'));
             }
             
             return response;
@@ -382,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     btnLogout.addEventListener('click', handleLogout); 
 
-
     // ===================================================================
     // 4. LÓGICA DE HISTÓRICO DE CONVERSAS (Backend)
     // ===================================================================
@@ -531,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     function renderChatMessages() {
         chatDisplay.innerHTML = '';
         conversationHistory.forEach(message => {
@@ -541,7 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnNewChat.addEventListener('click', startNewChat);
-
 
     // ===================================================================
     // 5. LÓGICA DO CHATBOT (Chatbase)
