@@ -1,0 +1,140 @@
+/* =================================================================== */
+/* THEME: Variáveis de Cor e Configuração Global                      */
+/* =================================================================== */
+
+:root {
+    /* Cores Principais */
+    --cor-primaria: #004d22;
+    --cor-secundaria: #008a3e;
+    --cor-acento: #00b853;
+    
+    /* Backgrounds */
+    --cor-fundo: #f8faf9;
+    --cor-app-bar: #ffffff;
+    --cor-card: #ffffff;
+    
+    /* Textos */
+    --cor-texto-principal: #1a1a1a;
+    --cor-texto-secundario: #6b7280;
+    --cor-texto-terciario: #9ca3af;
+    
+    /* Mensagens do Chat */
+    --cor-bolha-livia-fundo: #ffffff;
+    --cor-bolha-livia-borda: #e5e7eb;
+    --cor-bolha-usuario-fundo: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria));
+    --cor-bolha-usuario-texto: #ffffff;
+    
+    /* Inputs e Botões */
+    --cor-input-fundo: #f3f4f6;
+    --cor-input-borda: #e5e7eb;
+    --cor-input-borda-foco: var(--cor-secundaria);
+    --cor-btn-fundo: var(--cor-primaria);
+    --cor-btn-hover: var(--cor-secundaria);
+    --cor-btn-icone: #ffffff;
+    
+    /* Efeitos */
+    --cor-sombra: rgba(0, 0, 0, 0.08);
+    --cor-sombra-media: rgba(0, 0, 0, 0.12);
+    --cor-sombra-forte: rgba(0, 0, 0, 0.2);
+    --cor-erro: #ef4444;
+    --cor-sucesso: #10b981;
+    --cor-perigo: #dc2626;
+    --cor-perigo-hover: #b91c1c;
+    
+    /* Sidebar */
+    --sidebar-fundo: #ffffff;
+    --sidebar-texto: #374151;
+    --sidebar-texto-hover: #111827;
+    --sidebar-item-hover: #f3f4f6;
+    --sidebar-item-active: var(--cor-primaria);
+    --sidebar-divider: #e5e7eb;
+    
+    /* Transições */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Bordas */
+    --radius-small: 8px;
+    --radius-medium: 12px;
+    --radius-large: 16px;
+    --radius-full: 9999px;
+    
+    /* Safe Area */
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+    --safe-area-right: env(safe-area-inset-right);
+    
+    /* Altura fixa da app bar */
+    --app-bar-height: 72px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Cores Principais - Dark Mode */
+        --cor-primaria: #10b981;
+        --cor-secundaria: #34d399;
+        --cor-acento: #6ee7b7;
+        
+        /* Backgrounds */
+        --cor-fundo: #18181b;
+        --cor-app-bar: #232326;
+        --cor-card: #232326;
+        
+        /* Textos */
+        --cor-texto-principal: #f3f4f6;
+        --cor-texto-secundario: #9ca3af;
+        --cor-texto-terciario: #6b7280;
+        
+        /* Mensagens */
+        --cor-bolha-livia-fundo: #262626;
+        --cor-bolha-livia-borda: #404040;
+        --cor-bolha-usuario-fundo: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria));
+        
+        /* Inputs */
+        --cor-input-fundo: #262626;
+        --cor-input-borda: #404040;
+        
+        /* Sidebar */
+        --sidebar-fundo: #1a1a1a;
+        --sidebar-texto: #d1d5db;
+        --sidebar-texto-hover: #ffffff;
+        --sidebar-item-hover: #2d2d2d;
+        --sidebar-divider: #404040;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    height: -webkit-fill-available;
+}
+
+body {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-principal);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+    line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+    body {
+        align-items: center;
+    }
+}
+
+:root {
+    --keyboard-height: 0px;
+}
