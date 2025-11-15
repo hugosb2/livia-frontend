@@ -850,9 +850,12 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
     return (
         <div id="app-layout" className="app-layout" style={{ display: 'flex' }}>
             
-            {isMobileMenuOpen && (
-                <div id="mobile-menu-overlay" className="mobile-menu-overlay visible" onClick={() => setIsMobileMenuOpen(false)}></div>
-            )}
+            {/* --- CORREÇÃO DE ANIMAÇÃO: Overlay agora é permanente e tem classe dinâmica --- */}
+            <div 
+                id="mobile-menu-overlay" 
+                className={`mobile-menu-overlay ${isMobileMenuOpen ? 'visible' : ''}`} 
+                onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
             
             {/* --- MODIFICADO: Passa props para o Sidebar mobile --- */}
             <Sidebar 
@@ -1308,7 +1311,8 @@ const ChangePasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 
     return (
         <div id="change-password-modal" className={`modal-overlay ${isVisible ? 'visible' : ''}`} onClick={onClose}>
-            <div className="modal-card profile-modal-card" onClick={onCardClick}>
+            {/* --- CORREÇÃO DE MARGEM: Removida a classe 'profile-modal-card' --- */}
+            <div className="modal-card" onClick={onCardClick}>
                 <h2>Alterar Senha</h2>
                 <form id="change-password-form" onSubmit={handleSubmit}>
                     <div className="form-group form-group-password">
@@ -1379,10 +1383,11 @@ const DeleteAccountModal = ({ isVisible, onClose, onShowMessage, onLogout }) => 
 
     return (
         <div id="delete-account-modal" className={`modal-overlay ${isVisible ? 'visible' : ''}`} onClick={onClose}>
-            <div className="modal-card profile-modal-card" onClick={onCardClick}>
+            {/* --- CORREÇÃO DE MARGEM: Removida a classe 'profile-modal-card' --- */}
+            <div className="modal-card" onClick={onCardClick}>
                 <h2 style={{ color: 'var(--cor-erro)' }}>Excluir Conta</h2>
                 <p style={{ textAlign: 'left', margin: '10px 0 20px', color: 'var(--cor-texto-secundario)'}}>
-                    <strong>Atenção:</strong> Esta ação é irreversível. Todos os seus dados, incluindo histórico de conversas, serão permanentemente excluídos.
+                    <strong>Atenção:</strong> Esta ação é irreversível. Todos os seus dados, including histórico de conversas, serão permanentemente excluídos.
                 </p>
                 <form id="delete-account-form" onSubmit={handleSubmit}>
                     <div className="form-group form-group-password">
