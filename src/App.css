@@ -120,9 +120,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    overflow: auto;
+    /* --- CORREÇÃO DE SCROLL MOBILE --- */
+    min-height: 100vh; /* Fallback */
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden; /* Impede a página de rolar */
+    /* --- FIM DA CORREÇÃO --- */
     line-height: 1.6;
 }
 
@@ -138,7 +141,10 @@ body {
 /* =================================================================== */
 .app-layout {
     width: 100vw;
-    height: 100vh;
+    /* --- CORREÇÃO DE SCROLL MOBILE --- */
+    height: 100vh; /* Fallback */
+    height: 100dvh;
+    /* --- FIM DA CORREÇÃO --- */
     display: flex;
     background-color: var(--cor-fundo);
 }
@@ -171,7 +177,7 @@ body {
 /* =================================================================== */
 .history-sidebar {
     width: 280px;
-    height: 100vh;
+    height: 100%; /* Preenche o app-layout */
     background-color: rgba(255, 255, 255, 0.72);
     color: var(--sidebar-texto);
     display: flex;
@@ -388,7 +394,10 @@ body {
 /* Chat container sempre ocupa a tela toda, sem manipulação de altura dinâmica */
 .chat-container {
     width: 100vw;
-    height: 100vh;
+    /* --- CORREÇÃO DE SCROLL MOBILE --- */
+    height: 100vh; /* Fallback */
+    height: 100dvh;
+    /* --- FIM DA CORREÇÃO --- */
     display: flex;
     flex-direction: column;
     background: rgba(255,255,255,0.04);
@@ -866,6 +875,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* Correção */
     background: linear-gradient(135deg, #004d22 0%, #008a3e 100%);
     display: flex;
     justify-content: center;
@@ -934,6 +944,7 @@ body {
     align-items: center;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* Correção */
     position: fixed;
     top: 0;
     left: 0;
@@ -1208,6 +1219,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* Correção */
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
@@ -1400,6 +1412,7 @@ body {
     display: none;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh; /* Correção */
     width: 100vw;
     background-color: var(--cor-fundo);
     position: fixed;
@@ -1596,6 +1609,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh; /* Correção */
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 9998;
     opacity: 0;
@@ -1617,6 +1631,7 @@ body {
     left: -280px;
     width: 280px;
     height: 100vh;
+    height: 100dvh; /* Correção */
     background-color: rgba(255, 255, 255, 0.95);
     z-index: 9999;
     transition: left var(--transition-normal);
@@ -1627,7 +1642,7 @@ body {
     -webkit-backdrop-filter: blur(25px);
     /* Safe area para mobile */
     padding-top: var(--safe-area-top);
-    padding-bottom: var(--safe-area-bottom);
+    /* padding-bottom: var(--safe-area-bottom); */ /* Removido para o footer lidar com isso */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1648,7 +1663,7 @@ body {
     align-items: center;
     background-color: transparent;
     /* Safe area para mobile */
-    padding-top: calc(16px + var(--safe-area-top));
+    /* padding-top: calc(16px + var(--safe-area-top)); */ /* Removido pois o pai já tem */
 }
 
 .mobile-sidebar-header .logo-container {
@@ -1845,7 +1860,7 @@ body {
         right: 0;
         width: 100%;
         z-index: 1200;
-        padding-left: calc(16px + env(safe-area-inset-left));
+        padding-left: calc(16px + env(safe-a-inset-left));
         padding-right: calc(16px + env(safe-area-inset-right));
         box-sizing: border-box;
         transform: translateZ(0);
@@ -2014,6 +2029,19 @@ html {
     outline: 2px solid var(--cor-secundaria);
     outline-offset: 2px;
 }
+
+/* Desabilitar animações para usuários que preferem movimento reduzido */
+/*
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+*/
 
 /* =================================================================== */
 /* 14. UTILITÁRIOS                                                     */
