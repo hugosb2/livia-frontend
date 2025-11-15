@@ -38,13 +38,10 @@ const clearAuthData = () => {
     localStorage.removeItem('livia_user');
 };
 
-// MODIFICADO: para não enviar Content-Type: application/json se o body for FormData
 const apiFetch = async (endpoint, options = {}) => {
     const token = getToken();
-    
     const headers = new Headers(options.headers || {});
     
-    // NÃO definir Content-Type se for FormData (o browser faz isso)
     if (!(options.body instanceof FormData)) {
         headers.append('Content-Type', 'application/json');
     }
@@ -193,7 +190,7 @@ const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
 };
 
 // ===================================================================
-// COMPONENTE: RegisterForm
+// COMPONENTE: RegisterForm (MODIFICADO para 5 Etapas)
 // ===================================================================
 const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
     const [step, setStep] = useState(1);
@@ -207,6 +204,10 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         password: '',
         password_confirm: '',
     });
+    // Estados para o upload da foto
+    const [avatarFile, setAvatarFile] = useState(null); 
+    const [avatarPreview, setAvatarPreview] = useState(null); 
+    
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -251,6 +252,17 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         setError('');
     };
 
+    // Handle para seleção de FICHEIRO (Avatar)
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAvatarFile(file); // Guarda o ficheiro
+            setAvatarPreview(URL.createObjectURL(file)); // Cria um preview local
+            setError('');
+        }
+    };
+
+    // Etapa 1 -> 2: Valida Nome
     const handleStep1to2 = () => {
         if (!formData.first_name || !formData.last_name) {
             setError('Preencha seu nome e sobrenome.');
@@ -260,20 +272,23 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         setError('');
     };
     
+    // Etapa 2 -> 3: Valida Contato (Telefone agora é OBRIGATÓRIO)
     const handleStep2to3 = () => {
         if (!formData.email) {
             setError('Preencha o e-mail.');
             return;
         }
+        // Validação de telefone obrigatório
         const phoneDigits = formData.phone.replace(/\D/g, '');
-        if (formData.phone && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
-           setError('Telefone inválido. Deve ter 10 ou 11 dígitos (com DDD).');
+        if (phoneDigits.length < 10) { // Deve ter 10 (fixo) ou 11 (móvel) dígitos
+           setError('Telefone é obrigatório e deve ter 10 ou 11 dígitos (com DDD).');
            return;
         }
         setStep(3);
         setError('');
     };
 
+    // Etapa 3 -> 4: Valida Vínculo (Matrícula/SIAPE)
     const handleStep3to4 = async () => {
         if (!formData.user_type || !formData.username) {
             setError('Preencha o vínculo e a matrícula/SIAPE.');
@@ -299,16 +314,16 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            setStep(4); 
+            setStep(4); // Avança para a etapa 4 (Senha)
         } catch (err) {
             setError(err.message);
         } finally {
             setIsLoading(false);
         }
     };
-
-    const handleStep4Submit = async (e) => {
-        e.preventDefault();
+    
+    // Etapa 4 -> 5: Valida Senha
+    const handleStep4to5 = () => {
         if (!formData.password || !formData.password_confirm) {
             setError('Preencha os campos de senha.');
             return;
@@ -317,19 +332,63 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             setError('As senhas não conferem.');
             return;
         }
+        setStep(5); // Avança para a etapa 5 (Foto)
+        setError('');
+    };
+
+    // Etapa 5 -> Final: Submete TUDO
+    const handleStep5Submit = async (e) => {
+        e.preventDefault();
+        
+        // Validação da foto (opcional, mas se o utilizador quiser, pode tornar obrigatório)
+        // if (!avatarFile) {
+        //     setError('Por favor, adicione uma foto de perfil.');
+        //     return;
+        // }
         
         setIsLoading(true);
         setError('');
 
         try {
-            const response = await apiFetch('/register', {
+            // 1. Regista o utilizador com os dados de TEXTO
+            const registerResponse = await apiFetch('/register', {
                 method: 'POST',
-                body: JSON.stringify(formData) 
+                body: JSON.stringify(formData) // Envia todos os dados de texto
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
+            const registerData = await registerResponse.json();
+            if (!registerResponse.ok) throw new Error(registerData.message);
 
-            onRegisterSuccess(data.message);
+            // 2. Se o registo de texto deu certo E o utilizador selecionou uma foto...
+            if (avatarFile) {
+                // 3. Faz login "silencioso" para obter um token de autenticação
+                const loginResponse = await apiFetch('/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username: formData.username, password: formData.password })
+                });
+                const loginData = await loginResponse.json();
+                if (!loginResponse.ok) throw new Error('Erro ao autenticar para upload da foto.');
+                
+                const tempToken = loginData.access_token;
+                
+                // 4. Faz o upload da foto usando o token temporário
+                const uploadFormData = new FormData();
+                uploadFormData.append('avatar', avatarFile);
+
+                // Criamos um fetch temporário com o novo token
+                await fetch(`${API_BASE_URL}/api/profile/avatar`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${tempToken}`
+                        // Não defina Content-Type, o browser faz isso
+                    },
+                    body: uploadFormData,
+                });
+                // Não precisamos de tratar o erro aqui, pois o registo principal já deu certo
+            }
+
+            // 5. Sucesso!
+            onRegisterSuccess(registerData.message);
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -343,11 +402,11 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             <h1>Cadastro - LivIA</h1>
             <p>Crie sua conta de acesso</p>
             
-            <form id="register-form" onSubmit={handleStep4Submit}>
+            <form id="register-form" onSubmit={handleStep5Submit}>
                 
                 {step === 1 && (
                     <div className="register-step active" id="register-step-1">
-                        <p className="step-indicator">Etapa 1 de 4: Dados Pessoais</p>
+                        <p className="step-indicator">Etapa 1 de 5: Dados Pessoais</p>
                         <div className="form-group-row">
                             <div className="form-group">
                                 <label htmlFor="reg-first-name">Nome</label>
@@ -364,16 +423,17 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
 
                 {step === 2 && (
                     <div className="register-step active" id="register-step-2">
-                        <p className="step-indicator">Etapa 2 de 4: Contato</p>
+                        <p className="step-indicator">Etapa 2 de 5: Contato</p>
                         <div className="form-group">
                             <label htmlFor="reg-email">E-mail</label>
                             <input type="email" id="reg-email" required value={formData.email} onChange={handleChange} />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="reg-phone">Telefone (Opcional)</label>
+                            <label htmlFor="reg-phone">Telefone</label>
                             <input 
                                 type="tel" 
                                 id="reg-phone" 
+                                required // Agora é obrigatório
                                 value={formData.phone} 
                                 onChange={handleChange}
                                 placeholder="(XX) XXXXX-XXXX"
@@ -389,7 +449,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
 
                 {step === 3 && (
                     <div className="register-step active" id="register-step-3">
-                        <p className="step-indicator">Etapa 3 de 4: Vínculo</p>
+                        <p className="step-indicator">Etapa 3 de 5: Vínculo</p>
                         <div className="form-group">
                             <label htmlFor="reg-user-type">Eu sou</label>
                             <select id="reg-user-type" required value={formData.user_type} onChange={handleChange}>
@@ -413,7 +473,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                 
                 {step === 4 && (
                     <div className="register-step active" id="register-step-4">
-                        <p className="step-indicator">Etapa 4 de 4: Segurança</p>
+                        <p className="step-indicator">Etapa 4 de 5: Segurança</p>
                         <div className="form-group form-group-password">
                             <label htmlFor="reg-password">Senha</label>
                             <input type="password" id="reg-password" required value={formData.password} onChange={handleChange} />
@@ -426,6 +486,46 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                         </div>
                         <div className="step-nav-buttons">
                             <button type="button" id="btn-prev-4" className="auth-button secondary" onClick={() => setStep(3)}>Voltar</button>
+                            <button type="button" id="btn-next-4" className="auth-button" onClick={handleStep4to5}>Próximo</button>
+                        </div>
+                    </div>
+                )}
+                
+                {step === 5 && (
+                     <div className="register-step active" id="register-step-5">
+                        <p className="step-indicator">Etapa 5 de 5: Foto de Perfil</p>
+                        
+                        <div className="form-group" style={{ textAlign: 'center' }}>
+                            <img 
+                                src={avatarPreview || "/assets/perfil.png"} 
+                                alt="Preview" 
+                                className="profile-avatar-large"
+                                style={{ margin: '10px auto', cursor: 'pointer' }}
+                                onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                                onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
+                            />
+                            <input 
+                                type="file" 
+                                id="avatar-upload-input" 
+                                accept="image/png, image/jpeg"
+                                style={{ display: 'none' }}
+                                onChange={handleAvatarChange}
+                            />
+                            <button 
+                                type="button" 
+                                className="auth-button secondary" 
+                                style={{ maxWidth: '200px', margin: '10px auto' }}
+                                onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                            >
+                                <IconUpload /> {avatarFile ? "Mudar Foto" : "Adicionar Foto"}
+                            </button>
+                            <small style={{ color: 'var(--cor-texto-secundario)', fontSize: '0.8rem', display: 'block' }}>
+                                {avatarFile ? avatarFile.name : "Foto opcional."}
+                            </small>
+                        </div>
+
+                        <div className="step-nav-buttons">
+                            <button type="button" id="btn-prev-5" className="auth-button secondary" onClick={() => setStep(4)}>Voltar</button>
                             <button type="submit" className="auth-button" disabled={isLoading}>
                                 {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
                             </button>
@@ -482,7 +582,7 @@ const AuthScreen = ({ onLoginSuccess, onShowMessage }) => {
 
 
 // ===================================================================
-// COMPONENTE: ChatLayout
+// COMPONENTE: ChatLayout (MODIFICADO)
 // ===================================================================
 const ChatLayout = ({ user, onLogout, onShowProfile }) => {
     const [conversations, setConversations] = useState([]);
@@ -743,22 +843,21 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
             <Sidebar isMobile={false} />
 
             <div id="chat-container" className="chat-container">
+                {/* --- MODIFICADO: Cabeçalho do Chat --- */}
+                {/* Mostra a foto e nome da LivIA, não do utilizador */}
                 <header className="app-bar">
                     <div className="header-left">
                         <button id="mobile-menu-btn" className="mobile-menu-btn" title="Abrir menu" onClick={() => setIsMobileMenuOpen(true)}>
                             <IconMenu />
                         </button>
-                        {/* MODIFICADO: Mostra o avatar do UTILIZADOR aqui */}
                         <img 
-                            src={user.avatar_url || "/assets/perfil.png"} 
-                            alt="Avatar" 
+                            src="/assets/perfil.png" // Foto da LivIA
+                            alt="Avatar LivIA" 
                             className="header-avatar" 
-                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }} // Fallback
                         />
                         <div className="header-text">
-                            {/* MODIFICADO: Mostra o NOME do utilizador */}
-                            <h1><b>{user.first_name || 'Utilizador'}</b></h1>
-                            <p className="subtitle">Online</p>
+                            <h1><b>LivIA</b></h1>
+                            <p className="subtitle">Assistente Virtual do Campus Itapetinga</p>
                         </div>
                     </div>
                     
@@ -769,16 +868,32 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
                         <IconLogout />
                     </button>
                 </header>
+                {/* --- Fim da Modificação do Cabeçalho --- */}
 
                 <main id="chat-display" className="chat-display" ref={chatDisplayRef}>
                     {messages.map((msg, index) => (
                         <div key={index} className={`chat-message ${msg.role === 'user' ? 'user-message' : 'livia-message'}`}>
+                            
+                            {/* Avatar da LivIA (Esquerda) */}
                             {msg.role === 'assistant' && (
                                 <div className="avatar">
                                     <img src="/assets/perfil.png" alt="LivIA" />
                                 </div>
                             )}
+                            
+                            {/* Bolha da Mensagem */}
                             <div className="message-bubble" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+
+                            {/* --- NOVO: Avatar do Utilizador (Direita) --- */}
+                            {msg.role === 'user' && (
+                                <div className="avatar avatar-user">
+                                    <img 
+                                        src={user.avatar_url || "/assets/perfil.png"} 
+                                        alt="Meu Avatar"
+                                        onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
+                                    />
+                                </div>
+                            )}
                         </div>
                     ))}
                     {isTyping && (
@@ -846,12 +961,11 @@ const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                 <div className="profile-section">
                     <h2>Informações Pessoais</h2>
                     <div className="profile-info-card">
-                        {/* MODIFICADO: Mostra o avatar do utilizador */}
                         <img 
                             src={user.avatar_url || "/assets/perfil.png"} 
                             alt="Avatar" 
                             className="profile-avatar-large" 
-                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }} // Fallback
+                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
                         />
                         <h3 id="profile-display-name">{user.first_name} {user.last_name}</h3>
                         <p id="profile-display-email">{user.email}</p>
@@ -912,8 +1026,8 @@ const MessageModal = ({ isVisible, title, message, type = 'success', onClose }) 
 // ===================================================================
 const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessage }) => {
     const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '' });
-    const [avatarFile, setAvatarFile] = useState(null); // Ficheiro para upload
-    const [avatarPreview, setAvatarPreview] = useState(null); // URL local para preview
+    const [avatarFile, setAvatarFile] = useState(null); 
+    const [avatarPreview, setAvatarPreview] = useState(null); 
     const [isLoading, setIsLoading] = useState(false);
 
     const formatPhone = (value) => {
@@ -932,7 +1046,6 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
       return v;
     };
 
-    // Popula o formulário quando o modal abre
     useEffect(() => {
         if (user) {
             setFormData({
@@ -941,13 +1054,11 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                 email: user.email || '',
                 phone: formatPhone(user.phone || ''),
             });
-            // Define o preview inicial
             setAvatarPreview(user.avatar_url || null);
-            setAvatarFile(null); // Limpa ficheiro selecionado
+            setAvatarFile(null);
         }
     }, [user, isVisible]);
 
-    // Handle para mudanças nos inputs de TEXTO
     const handleChange = (e) => {
         const { id, value } = e.target;
         if (id === 'phone') {
@@ -957,22 +1068,21 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
         }
     };
 
-    // Handle para seleção de FICHEIRO (Avatar)
     const handleAvatarChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setAvatarFile(file); // Guarda o ficheiro
-            setAvatarPreview(URL.createObjectURL(file)); // Cria um preview local
+            setAvatarFile(file); 
+            setAvatarPreview(URL.createObjectURL(file)); 
         }
     };
 
-    // Lógica de Submissão (agora com upload)
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Telefone agora é OBRIGATÓRIO
         const phoneDigits = formData.phone.replace(/\D/g, '');
-        if (formData.phone && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
-           onShowMessage('Erro', 'Telefone inválido. Deve ter 10 ou 11 dígitos (com DDD).', 'error');
+        if (phoneDigits.length < 10) {
+           onShowMessage('Erro', 'Telefone é obrigatório e deve ter 10 ou 11 dígitos (com DDD).', 'error');
            return;
         }
 
@@ -980,23 +1090,21 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
         let newAvatarUrl = null;
 
         try {
-            // --- 1. Se um novo ficheiro foi selecionado, faz o upload primeiro ---
             if (avatarFile) {
                 const uploadFormData = new FormData();
                 uploadFormData.append('avatar', avatarFile);
 
                 const uploadResponse = await apiFetch('/profile/avatar', {
                     method: 'POST',
-                    body: uploadFormData, // apiFetch modificado deteta FormData
+                    body: uploadFormData,
                 });
 
                 const uploadData = await uploadResponse.json();
                 if (!uploadResponse.ok) throw new Error(uploadData.message || 'Erro no upload do avatar');
                 
-                newAvatarUrl = uploadData.avatar_url; // Guarda o novo URL
+                newAvatarUrl = uploadData.avatar_url; 
             }
 
-            // --- 2. Prepara os dados de texto para atualizar ---
             const textUpdateData = {
                 first_name: formData.first_name,
                 last_name: formData.last_name,
@@ -1004,12 +1112,10 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                 phone: formData.phone,
             };
 
-            // Se o upload foi feito, adiciona o novo URL aos dados
             if (newAvatarUrl) {
                 textUpdateData.avatar_url = newAvatarUrl;
             }
 
-            // --- 3. Atualiza os dados do perfil (texto e/ou URL do avatar) ---
             const profileResponse = await apiFetch('/profile', {
                 method: 'PUT',
                 body: JSON.stringify(textUpdateData)
@@ -1017,7 +1123,7 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
             const profileData = await profileResponse.json();
             if (!profileResponse.ok) throw new Error(profileData.message || 'Erro ao atualizar perfil');
 
-            onUpdateUser(profileData.user); // Atualiza o estado global do utilizador
+            onUpdateUser(profileData.user); 
             onShowMessage('Perfil Atualizado!', 'Seus dados foram atualizados com sucesso.', 'success');
             onClose();
 
@@ -1036,7 +1142,6 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                 <h2>Editar Perfil</h2>
                 <form id="edit-profile-form" onSubmit={handleSubmit}>
                     
-                    {/* --- NOVO: Secção de Avatar --- */}
                     <div className="form-group" style={{ textAlign: 'center' }}>
                         <label>Foto de Perfil</label>
                         <img 
@@ -1044,10 +1149,9 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                             alt="Preview" 
                             className="profile-avatar-large"
                             style={{ margin: '10px auto', cursor: 'pointer' }}
-                            onClick={() => document.getElementById('avatar-upload-input')?.click()} // Clica no input escondido
+                            onClick={() => document.getElementById('avatar-upload-input')?.click()} 
                             onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
                         />
-                        {/* Input de ficheiro escondido */}
                         <input 
                             type="file" 
                             id="avatar-upload-input" 
@@ -1058,13 +1162,12 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                         <button 
                             type="button" 
                             className="auth-button secondary" 
-                            style={{ maxWidth: '200px', margin: '0 auto' }}
+                            style={{ maxWidth: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             onClick={() => document.getElementById('avatar-upload-input')?.click()}
                         >
-                            <IconUpload /> Mudar Foto
+                            <IconUpload /> <span>Mudar Foto</span>
                         </button>
                     </div>
-                    {/* --- Fim da Secção de Avatar --- */}
 
                     <div className="form-group-row">
                         <div className="form-group">
@@ -1076,21 +1179,28 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                             <input type="text" id="last_name" required value={formData.last_name} onChange={handleChange} />
                         </div>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="email">E-mail</label>
-                        <input type="email" id="email" required value={formData.email} onChange={handleChange} />
+                    
+                    {/* --- NOVO LAYOUT 2x2 --- */}
+                    <div className="form-group-row">
+                        <div className="form-group">
+                            <label htmlFor="email">E-mail</label>
+                            <input type="email" id="email" required value={formData.email} onChange={handleChange} />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="phone">Telefone</label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                required // Obrigatório
+                                value={formData.phone} 
+                                onChange={handleChange}
+                                placeholder="(XX) XXXXX-XXXX"
+                                maxLength="15"
+                            />
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="phone">Telefone (Opcional)</label>
-                        <input 
-                            type="tel" 
-                            id="phone" 
-                            value={formData.phone} 
-                            onChange={handleChange}
-                            placeholder="(XX) XXXXX-XXXX"
-                            maxLength="15"
-                        />
-                    </div>
+                    {/* --- FIM DO NOVO LAYOUT --- */}
+
                     <div className="form-group">
                         <label htmlFor="edit-username">Matrícula/SIAPE</label>
                         <input type="text" id="edit-username" disabled value={user.username || ''} style={{ backgroundColor: 'var(--cor-input-fundo)' }} />
@@ -1112,7 +1222,6 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
 // COMPONENTE: ChangePasswordModal
 // ===================================================================
 const ChangePasswordModal = ({ isVisible, onClose, onShowMessage }) => {
-    // ... (código inalterado) ...
     const [formData, setFormData] = useState({ current_password: '', new_password: '', confirm_new_password: '' });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -1196,7 +1305,6 @@ const ChangePasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 // COMPONENTE: DeleteAccountModal
 // ===================================================================
 const DeleteAccountModal = ({ isVisible, onClose, onShowMessage, onLogout }) => {
-    // ... (código inalterado) ...
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -1262,7 +1370,6 @@ const DeleteAccountModal = ({ isVisible, onClose, onShowMessage, onLogout }) => 
 // COMPONENTE: App (Principal)
 // ===================================================================
 function App() {
-    // ... (código inalterado) ...
     const [appState, setAppState] = useState('splash');
     const [user, setUser] = useState(getStoredUser());
     const [activeModal, setActiveModal] = useState('none'); 
