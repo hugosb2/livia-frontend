@@ -782,7 +782,8 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
         }
     };
 
-    const Sidebar = ({ isMobile = false }) => (
+    // --- MODIFICADO: Sidebar agora recebe onShowProfile e onLogout ---
+    const Sidebar = ({ isMobile = false, onShowProfile, onLogout }) => (
         <aside id={isMobile ? "mobile-sidebar" : "history-sidebar"} className={isMobile ? `mobile-sidebar ${isMobileMenuOpen ? 'visible' : ''}` : "history-sidebar"}>
             <header className={isMobile ? "mobile-sidebar-header" : "history-header"}>
                 <div className="logo-container">
@@ -829,6 +830,20 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
                     ))
                 )}
             </nav>
+
+            {/* --- NOVO: Rodapé com ações de perfil (Apenas Mobile) --- */}
+            {isMobile && (
+                <footer className="mobile-sidebar-footer">
+                    <button className="mobile-sidebar-action-btn" onClick={onShowProfile}>
+                        <IconProfile />
+                        <span>Meu Perfil</span>
+                    </button>
+                    <button className="mobile-sidebar-action-btn danger" onClick={onLogout}>
+                        <IconLogout />
+                        <span>Sair</span>
+                    </button>
+                </footer>
+            )}
         </aside>
     );
 
@@ -839,15 +854,24 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
                 <div id="mobile-menu-overlay" className="mobile-menu-overlay visible" onClick={() => setIsMobileMenuOpen(false)}></div>
             )}
             
-            <Sidebar isMobile={true} />
+            {/* --- MODIFICADO: Passa props para o Sidebar mobile --- */}
+            <Sidebar 
+                isMobile={true} 
+                onShowProfile={onShowProfile} 
+                onLogout={onLogout} 
+            />
             <Sidebar isMobile={false} />
 
             <div id="chat-container" className="chat-container">
-                {/* --- MODIFICADO: Cabeçalho do Chat --- */}
-                {/* Mostra a foto e nome da LivIA, não do utilizador */}
                 <header className="app-bar">
                     <div className="header-left">
-                        <button id="mobile-menu-btn" className="mobile-menu-btn" title="Abrir menu" onClick={() => setIsMobileMenuOpen(true)}>
+                        {/* --- MODIFICADO: Adiciona classe 'is-open' dinâmica para animação --- */}
+                        <button 
+                            id="mobile-menu-btn" 
+                            className={`mobile-menu-btn ${isMobileMenuOpen ? 'is-open' : ''}`} 
+                            title="Abrir menu" 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                        >
                             <IconMenu />
                         </button>
                         <img 
@@ -861,12 +885,15 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
                         </div>
                     </div>
                     
-                    <button id="btn-profile" className="app-bar-icon-btn" title="Meu Perfil" onClick={onShowProfile}>
-                        <IconProfile />
-                    </button>
-                    <button id="btn-logout" className="app-bar-icon-btn" title="Sair" onClick={onLogout}>
-                        <IconLogout />
-                    </button>
+                    {/* --- MODIFICADO: Botões agora estão em um wrapper para desktop --- */}
+                    <div className="app-bar-desktop-actions">
+                        <button id="btn-profile" className="app-bar-icon-btn" title="Meu Perfil" onClick={onShowProfile}>
+                            <IconProfile />
+                        </button>
+                        <button id="btn-logout" className="app-bar-icon-btn" title="Sair" onClick={onLogout}>
+                            <IconLogout />
+                        </button>
+                    </div>
                 </header>
                 {/* --- Fim da Modificação do Cabeçalho --- */}
 
