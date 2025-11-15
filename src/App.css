@@ -2024,3 +2024,22 @@ html {
   font-family: inherit;
   font-size: 0.9rem;
 }
+
+.avatar-user {
+    background: var(--cor-secundaria); /* Cor de fundo diferente */
+    box-shadow: 0 2px 8px rgba(0, 138, 62, 0.2);
+}
+
+/* Garante que o avatar do utilizador fique à direita no chat */
+.user-message {
+    gap: 12px;
+}
+
+.user-message .avatar-user {
+    display: flex; /* Faz o avatar do utilizador aparecer */
+}
+
+.user-message .message-bubble {
+    /* Ajusta a borda para ficar bonita com o avatar */
+    border-radius: var(--radius-large) var(--radius-large) var(--radius-large) 4px;
+}
