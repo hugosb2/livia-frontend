@@ -96,7 +96,6 @@ const PasswordToggle = ({ inputId }) => {
     };
 
     // CORREÇÃO: Aplicando o estilo de correção de alinhamento inline
-    // Isso sobrescreve 'top' e 'transform' do App.css
     const iconStyle = {
         top: 'calc(50% + 10px)', // Move para baixo para compensar a label
         transform: 'translateY(-50%)' // Centraliza o ícone
@@ -191,7 +190,7 @@ const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
 };
 
 // ===================================================================
-// COMPONENTE: RegisterForm
+// COMPONENTE: RegisterForm (MODIFICADO para 4 Etapas)
 // ===================================================================
 const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
     const [step, setStep] = useState(1);
@@ -199,6 +198,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         first_name: '',
         last_name: '',
         email: '',
+        phone: '', // NOVO CAMPO
         user_type: '',
         username: '',
         password: '',
@@ -208,7 +208,28 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const REGEX_SIAPE = /^\d{7}$/; 
-    const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/; 
+    const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/;
+
+    // Função para formatar telefone (XX) XXXXX-XXXX
+    const formatPhone = (value) => {
+      if (!value) return '';
+      let v = value.replace(/\D/g, ''); // Remove non-digits
+      v = v.substring(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+      if (v.length > 10) {
+        // (XX) XXXXX-XXXX
+        v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+      } else if (v.length > 6) {
+        // (XX) XXXX-XXXX (para telefones fixos ou móveis antigos)
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+      } else if (v.length > 2) {
+        // (XX) XXXX
+        v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+      } else if (v.length > 0) {
+        // (XX
+        v = v.replace(/^(\d{0,2}).*/, '($1');
+      }
+      return v;
+    };
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -216,25 +237,50 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             'reg-first-name': 'first_name',
             'reg-last-name': 'last_name',
             'reg-email': 'email',
+            'reg-phone': 'phone', // NOVO CAMPO
             'reg-user-type': 'user_type',
             'reg-username': 'username',
             'reg-password': 'password',
             'reg-password-confirm': 'password_confirm',
         };
-        setFormData(prev => ({ ...prev, [keyMap[id]]: value }));
+        const key = keyMap[id];
+
+        // Aplica formatação especial para telefone
+        if (key === 'phone') {
+          setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
+        } else {
+          setFormData(prev => ({ ...prev, [key]: value }));
+        }
         setError('');
     };
 
-    const handleNext1 = () => {
-        if (!formData.first_name || !formData.last_name || !formData.email) {
-            setError('Preencha todos os dados pessoais.');
+    // Etapa 1 -> 2: Valida Nome
+    const handleStep1to2 = () => {
+        if (!formData.first_name || !formData.last_name) {
+            setError('Preencha seu nome e sobrenome.');
             return;
         }
         setStep(2);
         setError('');
     };
+    
+    // Etapa 2 -> 3: Valida Contato (Email obrigatório, Telefone opcional)
+    const handleStep2to3 = () => {
+        if (!formData.email) {
+            setError('Preencha o e-mail.');
+            return;
+        }
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        if (formData.phone && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
+           setError('Telefone inválido. Deve ter 10 ou 11 dígitos (com DDD).');
+           return;
+        }
+        setStep(3);
+        setError('');
+    };
 
-    const handleNext2 = async () => {
+    // Etapa 3 -> 4: Valida Vínculo (Matrícula/SIAPE)
+    const handleStep3to4 = async () => {
         if (!formData.user_type || !formData.username) {
             setError('Preencha o vínculo e a matrícula/SIAPE.');
             return;
@@ -259,7 +305,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            setStep(3);
+            setStep(4); // Avança para a etapa 4 (Senha)
         } catch (err) {
             setError(err.message);
         } finally {
@@ -267,7 +313,8 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    // Etapa 4 -> Final: Valida Senha e Submete
+    const handleStep4Submit = async (e) => {
         e.preventDefault();
         if (!formData.password || !formData.password_confirm) {
             setError('Preencha os campos de senha.');
@@ -284,7 +331,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         try {
             const response = await apiFetch('/register', {
                 method: 'POST',
-                body: JSON.stringify(formData)
+                body: JSON.stringify(formData) // Envia todos os dados
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
@@ -303,11 +350,11 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             <h1>Cadastro - LivIA</h1>
             <p>Crie sua conta de acesso</p>
             
-            <form id="register-form" onSubmit={handleSubmit}>
+            <form id="register-form" onSubmit={handleStep4Submit}>
                 
                 {step === 1 && (
                     <div className="register-step active" id="register-step-1">
-                        <p className="step-indicator">Etapa 1 de 3: Dados Pessoais</p>
+                        <p className="step-indicator">Etapa 1 de 4: Dados Pessoais</p>
                         <div className="form-group-row">
                             <div className="form-group">
                                 <label htmlFor="reg-first-name">Nome</label>
@@ -318,17 +365,38 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                                 <input type="text" id="reg-last-name" required value={formData.last_name} onChange={handleChange} />
                             </div>
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="reg-email">E-mail</label>
-                            <input type="email" id="reg-email" required value={formData.email} onChange={handleChange} />
-                        </div>
-                        <button type="button" id="btn-next-1" className="auth-button" onClick={handleNext1}>Próximo</button>
+                        <button type="button" id="btn-next-1" className="auth-button" onClick={handleStep1to2}>Próximo</button>
                     </div>
                 )}
 
                 {step === 2 && (
                     <div className="register-step active" id="register-step-2">
-                        <p className="step-indicator">Etapa 2 de 3: Vínculo</p>
+                        <p className="step-indicator">Etapa 2 de 4: Contato</p>
+                        <div className="form-group">
+                            <label htmlFor="reg-email">E-mail</label>
+                            <input type="email" id="reg-email" required value={formData.email} onChange={handleChange} />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="reg-phone">Telefone (Opcional)</label>
+                            <input 
+                                type="tel" 
+                                id="reg-phone" 
+                                value={formData.phone} 
+                                onChange={handleChange}
+                                placeholder="(XX) XXXXX-XXXX"
+                                maxLength="15"
+                            />
+                        </div>
+                        <div className="step-nav-buttons">
+                            <button type="button" id="btn-prev-2" className="auth-button secondary" onClick={() => setStep(1)}>Voltar</button>
+                            <button type="button" id="btn-next-2" className="auth-button" onClick={handleStep2to3}>Próximo</button>
+                        </div>
+                    </div>
+                )}
+
+                {step === 3 && (
+                    <div className="register-step active" id="register-step-3">
+                        <p className="step-indicator">Etapa 3 de 4: Vínculo</p>
                         <div className="form-group">
                             <label htmlFor="reg-user-type">Eu sou</label>
                             <select id="reg-user-type" required value={formData.user_type} onChange={handleChange}>
@@ -342,17 +410,17 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                             <input type="text" id="reg-username" required value={formData.username} onChange={handleChange} />
                         </div>
                         <div className="step-nav-buttons">
-                            <button type="button" id="btn-prev-2" className="auth-button secondary" onClick={() => setStep(1)}>Voltar</button>
-                            <button type="button" id="btn-next-2" className="auth-button" onClick={handleNext2} disabled={isLoading}>
+                            <button type="button" id="btn-prev-3" className="auth-button secondary" onClick={() => setStep(2)}>Voltar</button>
+                            <button type="button" id="btn-next-3" className="auth-button" onClick={handleStep3to4} disabled={isLoading}>
                                 {isLoading ? 'Verificando...' : 'Próximo'}
                             </button>
                         </div>
                     </div>
                 )}
                 
-                {step === 3 && (
-                    <div className="register-step active" id="register-step-3">
-                        <p className="step-indicator">Etapa 3 de 3: Segurança</p>
+                {step === 4 && (
+                    <div className="register-step active" id="register-step-4">
+                        <p className="step-indicator">Etapa 4 de 4: Segurança</p>
                         <div className="form-group form-group-password">
                             <label htmlFor="reg-password">Senha</label>
                             <input type="password" id="reg-password" required value={formData.password} onChange={handleChange} />
@@ -364,7 +432,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                             <PasswordToggle inputId="reg-password-confirm" />
                         </div>
                         <div className="step-nav-buttons">
-                            <button type="button" id="btn-prev-3" className="auth-button secondary" onClick={() => setStep(2)}>Voltar</button>
+                            <button type="button" id="btn-prev-4" className="auth-button secondary" onClick={() => setStep(3)}>Voltar</button>
                             <button type="submit" className="auth-button" disabled={isLoading}>
                                 {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
                             </button>
@@ -750,9 +818,22 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
 
 
 // ===================================================================
-// COMPONENTE: ProfileScreen
+// COMPONENTE: ProfileScreen (MODIFICADO)
 // ===================================================================
 const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
+    // Função para formatar o telefone (opcional, mas melhora a exibição)
+    const formatPhoneForDisplay = (phone) => {
+        if (!phone) return 'Não informado';
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length === 11) {
+            return `(${digits.substring(0, 2)}) ${digits.substring(2, 7)}-${digits.substring(7)}`;
+        }
+        if (digits.length === 10) {
+            return `(${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`;
+        }
+        return phone; // Retorna o original se não bater o formato
+    };
+
     return (
         <div id="profile-screen" className="profile-screen" style={{ display: 'flex' }}>
             <header className="profile-header">
@@ -772,6 +853,8 @@ const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                         <img src="/assets/perfil.png" alt="Avatar" className="profile-avatar-large" />
                         <h3 id="profile-display-name">{user.first_name} {user.last_name}</h3>
                         <p id="profile-display-email">{user.email}</p>
+                        {/* NOVO CAMPO DE TELEFONE */}
+                        <p id="profile-display-phone">Telefone: {formatPhoneForDisplay(user.phone)}</p>
                         <p id="profile-display-username">Matrícula/SIAPE: {user.username}</p>
                     </div>
                     <div className="profile-actions-grid">
@@ -824,38 +907,76 @@ const MessageModal = ({ isVisible, title, message, type = 'success', onClose }) 
 };
 
 // ===================================================================
-// COMPONENTE: EditProfileModal
+// COMPONENTE: EditProfileModal (MODIFICADO)
 // ===================================================================
 const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessage }) => {
-    const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '' });
+    // Adicionado 'phone'
+    const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '' });
     const [isLoading, setIsLoading] = useState(false);
 
+    // Função para formatar telefone (XX) XXXXX-XXXX
+    const formatPhone = (value) => {
+      if (!value) return '';
+      let v = value.replace(/\D/g, ''); // Remove non-digits
+      v = v.substring(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+      if (v.length > 10) {
+        v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+      } else if (v.length > 6) {
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+      } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+      } else if (v.length > 0) {
+        v = v.replace(/^(\d{0,2}).*/, '($1');
+      }
+      return v;
+    };
+
+    // Popula o formulário, incluindo o telefone
     useEffect(() => {
         if (user) {
             setFormData({
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
                 email: user.email || '',
+                phone: formatPhone(user.phone || ''), // Formata o telefone ao carregar
             });
         }
     }, [user, isVisible]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.id]: e.target.value });
+        const { id, value } = e.target;
+        if (id === 'phone') {
+            setFormData({ ...formData, phone: formatPhone(value) });
+        } else {
+            setFormData({ ...formData, [id]: value });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validação do telefone antes de enviar
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        if (formData.phone && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
+           onShowMessage('Erro', 'Telefone inválido. Deve ter 10 ou 11 dígitos (com DDD).', 'error');
+           return;
+        }
+
         setIsLoading(true);
         try {
+            // Envia o telefone (com máscara) para o backend
             const response = await apiFetch('/profile', {
                 method: 'PUT',
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    email: formData.email,
+                    phone: formData.phone // Envia o valor formatado
+                })
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Erro ao atualizar');
 
-            // MODIFICADO: Recebe 'user' em vez de 'profile' do backend
             onUpdateUser(data.user); 
             onShowMessage('Perfil Atualizado!', 'Seus dados foram atualizados com sucesso.', 'success');
             onClose();
@@ -886,6 +1007,18 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                     <div className="form-group">
                         <label htmlFor="email">E-mail</label>
                         <input type="email" id="email" required value={formData.email} onChange={handleChange} />
+                    </div>
+                    {/* NOVO CAMPO DE TELEFONE */}
+                    <div className="form-group">
+                        <label htmlFor="phone">Telefone (Opcional)</label>
+                        <input 
+                            type="tel" 
+                            id="phone" 
+                            value={formData.phone} 
+                            onChange={handleChange}
+                            placeholder="(XX) XXXXX-XXXX"
+                            maxLength="15"
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="edit-username">Matrícula/SIAPE</label>
