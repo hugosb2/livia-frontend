@@ -21,6 +21,7 @@ const IconEdit = () => <svg xmlns="http://www.w3.org/2000/svg" height="24" viewB
 const IconPassword = () => <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/></svg>;
 const IconDelete = () => <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>;
 const IconClose = () => <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>;
+const IconUpload = () => <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-120q-33 0-56.5-23.5T160-200v-240h80v240h480v-240h80v240q0 33-23.5 56.5T720-120H240Z"/></svg>;
 
 
 // --- Helpers de Autenticação e API ---
@@ -37,11 +38,17 @@ const clearAuthData = () => {
     localStorage.removeItem('livia_user');
 };
 
+// MODIFICADO: para não enviar Content-Type: application/json se o body for FormData
 const apiFetch = async (endpoint, options = {}) => {
     const token = getToken();
     
     const headers = new Headers(options.headers || {});
-    headers.append('Content-Type', 'application/json');
+    
+    // NÃO definir Content-Type se for FormData (o browser faz isso)
+    if (!(options.body instanceof FormData)) {
+        headers.append('Content-Type', 'application/json');
+    }
+
     if (token) {
         headers.append('Authorization', `Bearer ${token}`);
     }
@@ -95,10 +102,9 @@ const PasswordToggle = ({ inputId }) => {
         }
     };
 
-    // CORREÇÃO: Aplicando o estilo de correção de alinhamento inline
     const iconStyle = {
-        top: 'calc(50% + 10px)', // Move para baixo para compensar a label
-        transform: 'translateY(-50%)' // Centraliza o ícone
+        top: 'calc(50% + 10px)', 
+        transform: 'translateY(-50%)' 
     };
 
     return (
@@ -110,10 +116,9 @@ const PasswordToggle = ({ inputId }) => {
 
 
 // ===================================================================
-// COMPONENTE: LoginForm (MODIFICADO)
+// COMPONENTE: LoginForm
 // ===================================================================
 const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
-    // MODIFICADO: de 'email' para 'username'
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -125,7 +130,6 @@ const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
         setIsLoading(true);
 
         try {
-            // MODIFICADO: envia 'username' em vez de 'email'
             const response = await apiFetch('/login', {
                 method: 'POST',
                 body: JSON.stringify({ username, password })
@@ -151,7 +155,6 @@ const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
             <h1>Login - LivIA</h1>
             <p>Assistente Virtual do Campus Itapetinga</p>
             <form id="login-form" onSubmit={handleSubmit}>
-                {/* MODIFICADO: Campo de E-mail para Matrícula/SIAPE */}
                 <div className="form-group">
                     <label htmlFor="login-username">Matrícula/SIAPE</label>
                     <input 
@@ -190,7 +193,7 @@ const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
 };
 
 // ===================================================================
-// COMPONENTE: RegisterForm (MODIFICADO para 4 Etapas)
+// COMPONENTE: RegisterForm
 // ===================================================================
 const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
     const [step, setStep] = useState(1);
@@ -198,7 +201,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         first_name: '',
         last_name: '',
         email: '',
-        phone: '', // NOVO CAMPO
+        phone: '', 
         user_type: '',
         username: '',
         password: '',
@@ -210,22 +213,17 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
     const REGEX_SIAPE = /^\d{7}$/; 
     const REGEX_MATRICULA = /^\d{4}1[A-Z]{3}\d{2}[A-Z]{2}\d{4}$/;
 
-    // Função para formatar telefone (XX) XXXXX-XXXX
     const formatPhone = (value) => {
       if (!value) return '';
-      let v = value.replace(/\D/g, ''); // Remove non-digits
-      v = v.substring(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+      let v = value.replace(/\D/g, '');
+      v = v.substring(0, 11); 
       if (v.length > 10) {
-        // (XX) XXXXX-XXXX
         v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
       } else if (v.length > 6) {
-        // (XX) XXXX-XXXX (para telefones fixos ou móveis antigos)
         v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
       } else if (v.length > 2) {
-        // (XX) XXXX
         v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
       } else if (v.length > 0) {
-        // (XX
         v = v.replace(/^(\d{0,2}).*/, '($1');
       }
       return v;
@@ -237,7 +235,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             'reg-first-name': 'first_name',
             'reg-last-name': 'last_name',
             'reg-email': 'email',
-            'reg-phone': 'phone', // NOVO CAMPO
+            'reg-phone': 'phone', 
             'reg-user-type': 'user_type',
             'reg-username': 'username',
             'reg-password': 'password',
@@ -245,7 +243,6 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         };
         const key = keyMap[id];
 
-        // Aplica formatação especial para telefone
         if (key === 'phone') {
           setFormData(prev => ({ ...prev, phone: formatPhone(value) }));
         } else {
@@ -254,7 +251,6 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         setError('');
     };
 
-    // Etapa 1 -> 2: Valida Nome
     const handleStep1to2 = () => {
         if (!formData.first_name || !formData.last_name) {
             setError('Preencha seu nome e sobrenome.');
@@ -264,7 +260,6 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         setError('');
     };
     
-    // Etapa 2 -> 3: Valida Contato (Email obrigatório, Telefone opcional)
     const handleStep2to3 = () => {
         if (!formData.email) {
             setError('Preencha o e-mail.');
@@ -279,7 +274,6 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         setError('');
     };
 
-    // Etapa 3 -> 4: Valida Vínculo (Matrícula/SIAPE)
     const handleStep3to4 = async () => {
         if (!formData.user_type || !formData.username) {
             setError('Preencha o vínculo e a matrícula/SIAPE.');
@@ -305,7 +299,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            setStep(4); // Avança para a etapa 4 (Senha)
+            setStep(4); 
         } catch (err) {
             setError(err.message);
         } finally {
@@ -313,7 +307,6 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         }
     };
 
-    // Etapa 4 -> Final: Valida Senha e Submete
     const handleStep4Submit = async (e) => {
         e.preventDefault();
         if (!formData.password || !formData.password_confirm) {
@@ -331,7 +324,7 @@ const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
         try {
             const response = await apiFetch('/register', {
                 method: 'POST',
-                body: JSON.stringify(formData) // Envia todos os dados
+                body: JSON.stringify(formData) 
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
@@ -470,7 +463,6 @@ const AuthScreen = ({ onLoginSuccess, onShowMessage }) => {
     };
 
     const handleRegisterSuccess = (message) => {
-        // Mostra o modal de sucesso e força a volta para o login
         onShowMessage('Cadastro Realizado!', message || 'Usuário cadastrado com sucesso! Você já pode fazer login.', 'success');
         setIsLogin(true);
     };
@@ -495,7 +487,7 @@ const AuthScreen = ({ onLoginSuccess, onShowMessage }) => {
 const ChatLayout = ({ user, onLogout, onShowProfile }) => {
     const [conversations, setConversations] = useState([]);
     const [currentConversationId, setCurrentConversationId] = useState(null);
-    const [messages, setMessages] = useState([]); // Histórico da conversa ATUAL
+    const [messages, setMessages] = useState([]); 
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -516,14 +508,13 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
         }
     };
 
-    // Iniciar novo chat (função declarada antes para ser usada)
     const startNewChat = useCallback(() => {
         setCurrentConversationId(null);
         setMessages([
             { content: "Olá! Eu sou a LivIA, a assistente virtual do IF Baiano - Campus Itapetinga. Como posso te ajudar hoje?", role: 'assistant' }
         ]);
         setIsMobileMenuOpen(false);
-    }, []); // Vazio, não precisa de dependências
+    }, []); 
 
     const loadConversations = useCallback(async () => {
         try {
@@ -611,7 +602,6 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
             if (!currentConversationId) {
                 const newId = Array.isArray(savedConvo) ? savedConvo[0].id : savedConvo.id;
                 setCurrentConversationId(newId);
-                // Recarrega a lista da sidebar para mostrar a nova conversa
                 loadConversations();
             }
             
@@ -758,10 +748,17 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
                         <button id="mobile-menu-btn" className="mobile-menu-btn" title="Abrir menu" onClick={() => setIsMobileMenuOpen(true)}>
                             <IconMenu />
                         </button>
-                        <img src="/assets/perfil.png" alt="Avatar LivIA" className="header-avatar" />
+                        {/* MODIFICADO: Mostra o avatar do UTILIZADOR aqui */}
+                        <img 
+                            src={user.avatar_url || "/assets/perfil.png"} 
+                            alt="Avatar" 
+                            className="header-avatar" 
+                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }} // Fallback
+                        />
                         <div className="header-text">
-                            <h1><b>LivIA</b></h1>
-                            <p className="subtitle">Assistente Virtual do Campus Itapetinga</p>
+                            {/* MODIFICADO: Mostra o NOME do utilizador */}
+                            <h1><b>{user.first_name || 'Utilizador'}</b></h1>
+                            <p className="subtitle">Online</p>
                         </div>
                     </div>
                     
@@ -818,10 +815,9 @@ const ChatLayout = ({ user, onLogout, onShowProfile }) => {
 
 
 // ===================================================================
-// COMPONENTE: ProfileScreen (MODIFICADO)
+// COMPONENTE: ProfileScreen
 // ===================================================================
 const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
-    // Função para formatar o telefone (opcional, mas melhora a exibição)
     const formatPhoneForDisplay = (phone) => {
         if (!phone) return 'Não informado';
         const digits = phone.replace(/\D/g, '');
@@ -831,7 +827,7 @@ const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
         if (digits.length === 10) {
             return `(${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`;
         }
-        return phone; // Retorna o original se não bater o formato
+        return phone; 
     };
 
     return (
@@ -850,17 +846,22 @@ const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                 <div className="profile-section">
                     <h2>Informações Pessoais</h2>
                     <div className="profile-info-card">
-                        <img src="/assets/perfil.png" alt="Avatar" className="profile-avatar-large" />
+                        {/* MODIFICADO: Mostra o avatar do utilizador */}
+                        <img 
+                            src={user.avatar_url || "/assets/perfil.png"} 
+                            alt="Avatar" 
+                            className="profile-avatar-large" 
+                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }} // Fallback
+                        />
                         <h3 id="profile-display-name">{user.first_name} {user.last_name}</h3>
                         <p id="profile-display-email">{user.email}</p>
-                        {/* NOVO CAMPO DE TELEFONE */}
                         <p id="profile-display-phone">Telefone: {formatPhoneForDisplay(user.phone)}</p>
                         <p id="profile-display-username">Matrícula/SIAPE: {user.username}</p>
                     </div>
                     <div className="profile-actions-grid">
                         <button id="profile-edit-btn" className="profile-action-btn" onClick={() => onOpenModal('edit')}>
                             <IconEdit />
-                            Editar Dados Pessoais
+                            Editar Dados (Foto, Nome, Contato)
                         </button>
                         <button id="profile-password-btn" className="profile-action-btn" onClick={() => onOpenModal('password')}>
                             <IconPassword />
@@ -910,15 +911,15 @@ const MessageModal = ({ isVisible, title, message, type = 'success', onClose }) 
 // COMPONENTE: EditProfileModal (MODIFICADO)
 // ===================================================================
 const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessage }) => {
-    // Adicionado 'phone'
     const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '' });
+    const [avatarFile, setAvatarFile] = useState(null); // Ficheiro para upload
+    const [avatarPreview, setAvatarPreview] = useState(null); // URL local para preview
     const [isLoading, setIsLoading] = useState(false);
 
-    // Função para formatar telefone (XX) XXXXX-XXXX
     const formatPhone = (value) => {
       if (!value) return '';
-      let v = value.replace(/\D/g, ''); // Remove non-digits
-      v = v.substring(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+      let v = value.replace(/\D/g, '');
+      v = v.substring(0, 11); 
       if (v.length > 10) {
         v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
       } else if (v.length > 6) {
@@ -931,18 +932,22 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
       return v;
     };
 
-    // Popula o formulário, incluindo o telefone
+    // Popula o formulário quando o modal abre
     useEffect(() => {
         if (user) {
             setFormData({
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
                 email: user.email || '',
-                phone: formatPhone(user.phone || ''), // Formata o telefone ao carregar
+                phone: formatPhone(user.phone || ''),
             });
+            // Define o preview inicial
+            setAvatarPreview(user.avatar_url || null);
+            setAvatarFile(null); // Limpa ficheiro selecionado
         }
     }, [user, isVisible]);
 
+    // Handle para mudanças nos inputs de TEXTO
     const handleChange = (e) => {
         const { id, value } = e.target;
         if (id === 'phone') {
@@ -952,10 +957,19 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
         }
     };
 
+    // Handle para seleção de FICHEIRO (Avatar)
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAvatarFile(file); // Guarda o ficheiro
+            setAvatarPreview(URL.createObjectURL(file)); // Cria um preview local
+        }
+    };
+
+    // Lógica de Submissão (agora com upload)
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Validação do telefone antes de enviar
         const phoneDigits = formData.phone.replace(/\D/g, '');
         if (formData.phone && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
            onShowMessage('Erro', 'Telefone inválido. Deve ter 10 ou 11 dígitos (com DDD).', 'error');
@@ -963,30 +977,57 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
         }
 
         setIsLoading(true);
-        try {
-            // Envia o telefone (com máscara) para o backend
-            const response = await apiFetch('/profile', {
-                method: 'PUT',
-                body: JSON.stringify({
-                    first_name: formData.first_name,
-                    last_name: formData.last_name,
-                    email: formData.email,
-                    phone: formData.phone // Envia o valor formatado
-                })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Erro ao atualizar');
+        let newAvatarUrl = null;
 
-            onUpdateUser(data.user); 
+        try {
+            // --- 1. Se um novo ficheiro foi selecionado, faz o upload primeiro ---
+            if (avatarFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('avatar', avatarFile);
+
+                const uploadResponse = await apiFetch('/profile/avatar', {
+                    method: 'POST',
+                    body: uploadFormData, // apiFetch modificado deteta FormData
+                });
+
+                const uploadData = await uploadResponse.json();
+                if (!uploadResponse.ok) throw new Error(uploadData.message || 'Erro no upload do avatar');
+                
+                newAvatarUrl = uploadData.avatar_url; // Guarda o novo URL
+            }
+
+            // --- 2. Prepara os dados de texto para atualizar ---
+            const textUpdateData = {
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                email: formData.email,
+                phone: formData.phone,
+            };
+
+            // Se o upload foi feito, adiciona o novo URL aos dados
+            if (newAvatarUrl) {
+                textUpdateData.avatar_url = newAvatarUrl;
+            }
+
+            // --- 3. Atualiza os dados do perfil (texto e/ou URL do avatar) ---
+            const profileResponse = await apiFetch('/profile', {
+                method: 'PUT',
+                body: JSON.stringify(textUpdateData)
+            });
+            const profileData = await profileResponse.json();
+            if (!profileResponse.ok) throw new Error(profileData.message || 'Erro ao atualizar perfil');
+
+            onUpdateUser(profileData.user); // Atualiza o estado global do utilizador
             onShowMessage('Perfil Atualizado!', 'Seus dados foram atualizados com sucesso.', 'success');
             onClose();
+
         } catch (error) {
             onShowMessage('Erro', error.message, 'error');
         } finally {
             setIsLoading(false);
         }
     };
-
+    
     const onCardClick = (e) => e.stopPropagation();
 
     return (
@@ -994,6 +1035,37 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
             <div className="modal-card profile-modal-card" onClick={onCardClick}>
                 <h2>Editar Perfil</h2>
                 <form id="edit-profile-form" onSubmit={handleSubmit}>
+                    
+                    {/* --- NOVO: Secção de Avatar --- */}
+                    <div className="form-group" style={{ textAlign: 'center' }}>
+                        <label>Foto de Perfil</label>
+                        <img 
+                            src={avatarPreview || "/assets/perfil.png"} 
+                            alt="Preview" 
+                            className="profile-avatar-large"
+                            style={{ margin: '10px auto', cursor: 'pointer' }}
+                            onClick={() => document.getElementById('avatar-upload-input')?.click()} // Clica no input escondido
+                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
+                        />
+                        {/* Input de ficheiro escondido */}
+                        <input 
+                            type="file" 
+                            id="avatar-upload-input" 
+                            accept="image/png, image/jpeg"
+                            style={{ display: 'none' }}
+                            onChange={handleAvatarChange}
+                        />
+                        <button 
+                            type="button" 
+                            className="auth-button secondary" 
+                            style={{ maxWidth: '200px', margin: '0 auto' }}
+                            onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                        >
+                            <IconUpload /> Mudar Foto
+                        </button>
+                    </div>
+                    {/* --- Fim da Secção de Avatar --- */}
+
                     <div className="form-group-row">
                         <div className="form-group">
                             <label htmlFor="first_name">Nome</label>
@@ -1008,7 +1080,6 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
                         <label htmlFor="email">E-mail</label>
                         <input type="email" id="email" required value={formData.email} onChange={handleChange} />
                     </div>
-                    {/* NOVO CAMPO DE TELEFONE */}
                     <div className="form-group">
                         <label htmlFor="phone">Telefone (Opcional)</label>
                         <input 
@@ -1041,6 +1112,7 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
 // COMPONENTE: ChangePasswordModal
 // ===================================================================
 const ChangePasswordModal = ({ isVisible, onClose, onShowMessage }) => {
+    // ... (código inalterado) ...
     const [formData, setFormData] = useState({ current_password: '', new_password: '', confirm_new_password: '' });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -1124,6 +1196,7 @@ const ChangePasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 // COMPONENTE: DeleteAccountModal
 // ===================================================================
 const DeleteAccountModal = ({ isVisible, onClose, onShowMessage, onLogout }) => {
+    // ... (código inalterado) ...
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -1189,6 +1262,7 @@ const DeleteAccountModal = ({ isVisible, onClose, onShowMessage, onLogout }) => 
 // COMPONENTE: App (Principal)
 // ===================================================================
 function App() {
+    // ... (código inalterado) ...
     const [appState, setAppState] = useState('splash');
     const [user, setUser] = useState(getStoredUser());
     const [activeModal, setActiveModal] = useState('none'); 
