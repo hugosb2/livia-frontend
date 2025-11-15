@@ -1022,9 +1022,10 @@ const MessageModal = ({ isVisible, title, message, type = 'success', onClose }) 
 };
 
 // ===================================================================
-// COMPONENTE: EditProfileModal (MODIFICADO)
+// COMPONENTE: EditProfileModal (MODIFICADO COM SCROLL INTERNO)
 // ===================================================================
 const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessage }) => {
+    // ... (toda a lógica de 'useState', 'useEffect', 'handleChange', etc. continua igual)
     const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '' });
     const [avatarFile, setAvatarFile] = useState(null); 
     const [avatarPreview, setAvatarPreview] = useState(null); 
@@ -1079,7 +1080,6 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Telefone agora é OBRIGATÓRIO
         const phoneDigits = formData.phone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
            onShowMessage('Erro', 'Telefone é obrigatório e deve ter 10 ou 11 dígitos (com DDD).', 'error');
@@ -1139,80 +1139,90 @@ const EditProfileModal = ({ isVisible, onClose, user, onUpdateUser, onShowMessag
     return (
         <div id="edit-profile-modal" className={`modal-overlay ${isVisible ? 'visible' : ''}`} onClick={onClose}>
             <div className="modal-card profile-modal-card" onClick={onCardClick}>
+                
+                {/* 1. HEADER (Fixo) */}
                 <h2>Editar Perfil</h2>
+                
                 <form id="edit-profile-form" onSubmit={handleSubmit}>
                     
-                    <div className="form-group" style={{ textAlign: 'center' }}>
-                        <label>Foto de Perfil</label>
-                        <img 
-                            src={avatarPreview || "/assets/perfil.png"} 
-                            alt="Preview" 
-                            className="profile-avatar-large"
-                            style={{ margin: '10px auto', cursor: 'pointer' }}
-                            onClick={() => document.getElementById('avatar-upload-input')?.click()} 
-                            onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
-                        />
-                        <input 
-                            type="file" 
-                            id="avatar-upload-input" 
-                            accept="image/png, image/jpeg"
-                            style={{ display: 'none' }}
-                            onChange={handleAvatarChange}
-                        />
-                        <button 
-                            type="button" 
-                            className="auth-button secondary" 
-                            style={{ maxWidth: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                            onClick={() => document.getElementById('avatar-upload-input')?.click()}
-                        >
-                            <IconUpload /> <span>Mudar Foto</span>
-                        </button>
-                    </div>
-
-                    <div className="form-group-row">
-                        <div className="form-group">
-                            <label htmlFor="first_name">Nome</label>
-                            <input type="text" id="first_name" required value={formData.first_name} onChange={handleChange} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="last_name">Sobrenome</label>
-                            <input type="text" id="last_name" required value={formData.last_name} onChange={handleChange} />
-                        </div>
-                    </div>
-                    
-                    {/* --- NOVO LAYOUT 2x2 --- */}
-                    <div className="form-group-row">
-                        <div className="form-group">
-                            <label htmlFor="email">E-mail</label>
-                            <input type="email" id="email" required value={formData.email} onChange={handleChange} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="phone">Telefone</label>
-                            <input 
-                                type="tel" 
-                                id="phone" 
-                                required // Obrigatório
-                                value={formData.phone} 
-                                onChange={handleChange}
-                                placeholder="(XX) XXXXX-XXXX"
-                                maxLength="15"
+                    {/* 2. BODY (Rolável) */}
+                    <div className="profile-modal-body-scrollable">
+                        <div className="form-group" style={{ textAlign: 'center' }}>
+                            <label>Foto de Perfil</label>
+                            <img 
+                                src={avatarPreview || "/assets/perfil.png"} 
+                                alt="Preview" 
+                                className="profile-avatar-large"
+                                style={{ margin: '10px auto', cursor: 'pointer' }}
+                                onClick={() => document.getElementById('avatar-upload-input')?.click()} 
+                                onError={(e) => { e.target.onerror = null; e.target.src='/assets/perfil.png' }}
                             />
+                            <input 
+                                type="file" 
+                                id="avatar-upload-input" 
+                                accept="image/png, image/jpeg"
+                                style={{ display: 'none' }}
+                                onChange={handleAvatarChange}
+                            />
+                            <button 
+                                type="button" 
+                                className="auth-button secondary" 
+                                style={{ maxWidth: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                            >
+                                <IconUpload /> <span>Mudar Foto</span>
+                            </button>
                         </div>
-                    </div>
-                    {/* --- FIM DO NOVO LAYOUT --- */}
 
-                    <div className="form-group">
-                        <label htmlFor="edit-username">Matrícula/SIAPE</label>
-                        <input type="text" id="edit-username" disabled value={user.username || ''} style={{ backgroundColor: 'var(--cor-input-fundo)' }} />
-                        <small style={{ color: 'var(--cor-texto-secundario)', fontSize: '0.8rem', paddingTop: '5px', display: 'block' }}>Matrícula/SIAPE não pode ser alterada</small>
-                    </div>
-                    <div className="step-nav-buttons">
-                        <button type="button" id="edit-profile-cancel" className="auth-button secondary" onClick={onClose} disabled={isLoading}>Cancelar</button>
-                        <button type="submit" className="auth-button" disabled={isLoading}>
-                            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-                        </button>
-                    </div>
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label htmlFor="first_name">Nome</label>
+                                <input type="text" id="first_name" required value={formData.first_name} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="last_name">Sobrenome</label>
+                                <input type="text" id="last_name" required value={formData.last_name} onChange={handleChange} />
+                            </div>
+                        </div>
+                        
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label htmlFor="email">E-mail</label>
+                                <input type="email" id="email" required value={formData.email} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="phone">Telefone</label>
+                                <input 
+                                    type="tel" 
+                                    id="phone" 
+                                    required // Obrigatório
+                                    value={formData.phone} 
+                                    onChange={handleChange}
+                                    placeholder="(XX) XXXXX-XXXX"
+                                    maxLength="15"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="edit-username">Matrícula/SIAPE</label>
+                            <input type="text" id="edit-username" disabled value={user.username || ''} style={{ backgroundColor: 'var(--cor-input-fundo)' }} />
+                            <small style={{ color: 'var(--cor-texto-secundario)', fontSize: '0.8rem', paddingTop: '5px', display: 'block' }}>Matrícula/SIAPE não pode ser alterada</small>
+                        </div>
+                    </div> {/* Fim do .profile-modal-body-scrollable */}
+
+
+                    {/* 3. FOOTER (Fixo) */}
+                    <div className="profile-modal-footer">
+                        <div className="step-nav-buttons">
+                            <button type="button" id="edit-profile-cancel" className="auth-button secondary" onClick={onClose} disabled={isLoading}>Cancelar</button>
+                            <button type="submit" className="auth-button" disabled={isLoading}>
+                                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                            </button>
+                        </div>
+                    </div> {/* Fim do .profile-modal-footer */}
                 </form>
+
             </div>
         </div>
     );

@@ -1200,7 +1200,7 @@ body {
 }
 
 /* =================================================================== */
-/* 9. MODAIS                                                           */
+/* 9. MODAIS (COM AJUSTE DE ROLAGEM)                                   */
 /* =================================================================== */
 .modal-overlay {
     position: fixed;
@@ -1287,6 +1287,74 @@ body {
 /* Modal de Perfil */
 .profile-modal-card {
     max-width: 480px;
+
+    /* --- NOVAS REGRAS PARA O CARD DE PERFIL --- */
+    padding: 0; /* Removemos o padding para controlar internamente */
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* Define uma altura máxima */
+    overflow: hidden; /* Esconde qualquer overflow do card */
+}
+
+/* Header (Título) dentro do modal de perfil */
+.profile-modal-card h2 {
+    /* Recriamos o padding que removemos do card */
+    padding: 32px 32px 20px 32px;
+    flex-shrink: 0; /* Impede que o header encolha */
+}
+
+/* O <form> deve ocupar o espaço restante */
+.profile-modal-card #edit-profile-form {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0; /* Corrige bug de flexbox no Safari */
+    overflow: hidden;
+}
+
+/* NOVO: Corpo rolável */
+.profile-modal-body-scrollable {
+    overflow-y: auto; /* A MÁGICA! Adiciona scroll vertical */
+    overflow-x: hidden;
+    flex-grow: 1; /* Faz esta área ocupar o espaço disponível */
+    padding: 4px 32px 16px 32px; /* Padding interno para o conteúdo */
+
+    /* Estilização da barra de rolagem (opcional) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--cor-texto-terciario) transparent;
+}
+.profile-modal-body-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.profile-modal-body-scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+.profile-modal-body-scrollable::-webkit-scrollbar-thumb {
+    background: var(--cor-texto-terciario);
+    border-radius: 3px;
+}
+
+
+/* NOVO: Rodapé fixo para os botões */
+.profile-modal-footer {
+    padding: 24px 32px 32px 32px;
+    flex-shrink: 0; /* Impede que o rodapé encolha */
+    border-top: 1px solid var(--cor-input-borda);
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Remove a margem dos botões que agora estão no footer */
+.profile-modal-footer .step-nav-buttons {
+    margin-top: 0;
+}
+
+/* Ajuste do footer para dark mode */
+@media (prefers-color-scheme: dark) {
+    .profile-modal-footer {
+        background-color: rgba(31, 31, 31, 0.5);
+    }
 }
 
 .profile-info {
@@ -1704,8 +1772,8 @@ body {
     .chat-display {
         padding: 16px;
         gap: 16px;
-        padding-left: calc(16px + var(--safe-area-left));
-        padding-right: calc(16px + var(--safe-area-right));
+        padding-left: calc(16px + env(safe-area-inset-left));
+        padding-right: calc(16px + env(safe-area-inset-right));
     }
     
     .chat-message {
@@ -1715,8 +1783,8 @@ body {
     .input-row {
         padding: 12px 16px;
         padding-bottom: calc(12px + var(--safe-area-bottom));
-        padding-left: calc(16px + var(--safe-area-left));
-        padding-right: calc(16px + var(--safe-area-right));
+        padding-left: calc(16px + env(safe-area-inset-left));
+        padding-right: calc(16px + env(safe-area-inset-right));
     }
     
     /* Garantir que o menu móvel ocupe a tela toda */
