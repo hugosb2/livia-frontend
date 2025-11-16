@@ -7,6 +7,7 @@ import './App.css';
 // Auth Components
 import { SplashScreen } from './components/auth/SplashScreen';
 import { AuthScreen } from './components/auth/AuthScreen';
+import { ForgotPasswordModal } from './components/auth/ForgotPasswordModal'; // <-- NOVO
 
 // Chat Components
 import { ChatLayout } from './components/chat/ChatLayout';
@@ -16,9 +17,11 @@ import { ProfileScreen } from './components/profile/ProfileScreen';
 import { EditProfileModal } from './components/profile/EditProfileModal';
 import { ChangePasswordModal } from './components/profile/ChangePasswordModal';
 import { DeleteAccountModal } from './components/profile/DeleteAccountModal';
+import { RegenerateCodeModal } from './components/profile/RegenerateCodeModal'; // <-- NOVO
 
 // UI Components
 import { MessageModal } from './components/ui/MessageModal';
+import { ShowRecoveryCodeModal } from './components/ui/ShowRecoveryCodeModal'; // <-- NOVO
 
 // Utilities
 import {
@@ -36,6 +39,17 @@ function App() {
     const [user, setUser] = useState(getStoredUser());
     const [activeModal, setActiveModal] = useState('none'); 
     const [messageModal, setMessageModal] = useState({ visible: false });
+
+    // NOVO ESTADO E HANDLERS PARA O CÓDIGO DE RECUPERAÇÃO
+    const [recoveryCodeModal, setRecoveryCodeModal] = useState({ visible: false, code: null });
+
+    const handleShowNewCode = (code) => {
+        setRecoveryCodeModal({ visible: true, code: code });
+    };
+    const handleCloseRecoveryCodeModal = () => {
+        setRecoveryCodeModal({ visible: false, code: null });
+    };
+    // FIM DO NOVO ESTADO
 
     useEffect(() => {
         const checkAuth = () => {
@@ -100,13 +114,23 @@ function App() {
             case 'splash':
                 return <SplashScreen />;
             case 'auth':
-                return <AuthScreen onLoginSuccess={handleLoginSuccess} onShowMessage={handleShowMessage} />;
+                return <AuthScreen 
+                    onLoginSuccess={handleLoginSuccess} 
+                    onShowMessage={handleShowMessage}
+                    onOpenModal={handleOpenModal} // <-- MODIFICADO
+                    onShowNewCode={handleShowNewCode} // <-- MODIFICADO
+                />;
             case 'chat':
                 return <ChatLayout user={user} onLogout={handleLogout} onShowProfile={handleShowProfile} />;
             case 'profile':
                 return <ProfileScreen user={user} onBack={handleBackToChat} onLogout={handleLogout} onOpenModal={handleOpenModal} />;
             default:
-                return <AuthScreen onLoginSuccess={handleLoginSuccess} onShowMessage={handleShowMessage} />;
+                return <AuthScreen 
+                    onLoginSuccess={handleLoginSuccess} 
+                    onShowMessage={handleShowMessage} 
+                    onOpenModal={handleOpenModal} // <-- MODIFICADO
+                    onShowNewCode={handleShowNewCode} // <-- MODIFICADO
+                />;
         }
     };
 
@@ -120,6 +144,20 @@ function App() {
                 message={messageModal.message}
                 type={messageModal.type}
                 onClose={handleCloseMessageModal}
+            />
+            
+            {/* NOVO MODAL PARA EXIBIR O CÓDIGO */}
+            <ShowRecoveryCodeModal
+                isVisible={recoveryCodeModal.visible}
+                code={recoveryCodeModal.code}
+                onClose={handleCloseRecoveryCodeModal}
+            />
+
+            {/* NOVO MODAL PARA REDEFINIR SENHA */}
+            <ForgotPasswordModal
+                isVisible={activeModal === 'forgotPassword'}
+                onClose={handleCloseModal}
+                onShowMessage={handleShowMessage}
             />
             
             {user && (
@@ -141,6 +179,13 @@ function App() {
                         onClose={handleCloseModal}
                         onShowMessage={handleShowMessage}
                         onLogout={handleLogout}
+                    />
+                    {/* NOVO MODAL PARA REGERAR CÓDIGO */}
+                    <RegenerateCodeModal
+                        isVisible={activeModal === 'regenerateCode'}
+                        onClose={handleCloseModal}
+                        onShowMessage={handleShowMessage}
+                        onShowNewCode={handleShowNewCode}
                     />
                 </>
             )}

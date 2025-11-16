@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PasswordToggle } from '../ui/PasswordToggle';
 import { apiFetch } from '../../utils/authHelpers';
 
-export const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
+export const LoginForm = ({ onLoginSuccess, onShowRegister, onShowForgotPassword }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -68,9 +68,18 @@ export const LoginForm = ({ onLoginSuccess, onShowRegister }) => {
                 <p id="login-error" className="error-message" style={{ display: error ? 'block' : 'none' }}>
                     {error}
                 </p>
-                <p className="toggle-link">
+                
+                {/* === ÁREA MODIFICADA === */}
+                <p className="toggle-link" style={{ marginBottom: '8px', marginTop: '24px' }}>
                     Não tem uma conta? <button type="button" className="link-button" id="show-register" onClick={onShowRegister}>Cadastre-se</button>
                 </p>
+                <p className="toggle-link" style={{ marginTop: '0' }}>
+                    <button type="button" className="link-button" id="show-forgot-password" onClick={onShowForgotPassword}>
+                        Esqueceu sua senha?
+                    </button>
+                </p>
+                {/* === FIM DA ÁREA MODIFICADA === */}
+
             </form>
         </div>
     );

@@ -35,12 +35,28 @@ export const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                             <IconEdit />
                             Editar Dados (Foto, Nome, Contato)
                         </button>
+                    </div>
+                </div>
+
+                {/* === SEÇÃO MODIFICADA/ADICIONADA === */}
+                <div className="profile-section">
+                    <h2>Segurança</h2>
+                    <div className="profile-actions-grid">
                         <button id="profile-password-btn" className="profile-action-btn" onClick={() => onOpenModal('password')}>
                             <IconPassword />
                             Alterar Senha
                         </button>
+                        <button id="profile-regenerate-code-btn" className="profile-action-btn" onClick={() => onOpenModal('regenerateCode')}>
+                            <IconPassword />
+                            Gerar Novo Código de Recuperação
+                        </button>
                     </div>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--cor-texto-secundario)', marginTop: '16px', lineHeight: '1.5' }}>
+                        O <strong>Código de Recuperação</strong> é usado para redefinir sua senha caso você a esqueça.
+                        Ao gerar um novo código, o antigo será invalidado.
+                    </p>
                 </div>
+                {/* === FIM DA SEÇÃO === */}
 
                 <div className="profile-section">
                     <h2>Ações da Conta</h2>

@@ -156,7 +156,9 @@ export const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                 });
             }
 
-            onRegisterSuccess(registerData.message);
+            // === MODIFICADO ===
+            // Passa a mensagem E o código de recuperação
+            onRegisterSuccess(registerData.message, registerData.recovery_code);
 
         } catch (err) {
             setError(err.message);
