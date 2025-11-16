@@ -3,6 +3,9 @@ import { apiFetch } from '../../utils/authHelpers';
 import { PasswordToggle } from '../ui/PasswordToggle';
 
 export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
+    // 1. Controle de estado para a etapa atual
+    const [step, setStep] = useState(1);
+    
     const [formData, setFormData] = useState({
         username: '',
         contact: '',
@@ -12,10 +15,11 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    // Limpa o formulário ao fechar
+    // Limpa o formulário e reseta as etapas ao fechar
     const handleClose = () => {
         setFormData({ username: '', contact: '', recovery_code: '', new_password: '', confirm_password: '' });
         setIsLoading(false);
+        setStep(1); // Reseta para a etapa 1
         onClose();
     };
 
@@ -23,15 +27,46 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-
-        if (formData.new_password !== formData.confirm_password) {
-            onShowMessage('Erro', 'As novas senhas não conferem.', 'error');
-            setIsLoading(false);
+    // 2. Funções de navegação entre etapas
+    const handleStep1to2 = () => {
+        if (!formData.username.trim()) {
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha sua Matrícula/SIAPE.', 'error');
             return;
         }
+        setStep(2);
+    };
+
+    const handleStep2to3 = () => {
+        if (!formData.contact.trim()) {
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha seu e-mail ou telefone.', 'error');
+            return;
+        }
+        setStep(3);
+    };
+
+    const handleStep3to4 = () => {
+        if (!formData.recovery_code.trim()) {
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha seu código de recuperação.', 'error');
+            return;
+        }
+        setStep(4);
+    };
+
+    // 3. Função de envio (agora na etapa final)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!formData.new_password || !formData.confirm_password) {
+            onShowMessage('Campos Obrigatórios', 'Por favor, preencha a nova senha e a confirmação.', 'error');
+            return;
+        }
+        
+        if (formData.new_password !== formData.confirm_password) {
+            onShowMessage('Erro', 'As novas senhas não conferem.', 'error');
+            return;
+        }
+
+        setIsLoading(true);
 
         try {
             const response = await apiFetch('/recover-password', {
@@ -48,7 +83,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
             if (!response.ok) throw new Error(data.message);
 
             onShowMessage('Sucesso!', data.message, 'success');
-            handleClose();
+            handleClose(); // Fecha e reseta o modal
 
         } catch (error) {
             onShowMessage('Erro', error.message, 'error');
@@ -59,51 +94,91 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 
     return (
         <div className={`modal-overlay ${isVisible ? 'visible' : ''}`} onClick={handleClose}>
-            <div className="modal-card profile-modal-card" onClick={(e) => e.stopPropagation()}>
-                <h2>Redefinir Senha</h2>
-                
-                <form id="forgot-password-form" onSubmit={handleSubmit}>
+            {/* O onSubmit agora está no <form> e será acionado pelo botão type="submit" na etapa 4 */}
+            <form id="forgot-password-form" onSubmit={handleSubmit} style={{ margin: 0, padding: 0, width: '100%', display: 'contents' }}>
+                <div className="modal-card profile-modal-card" onClick={(e) => e.stopPropagation()}>
+                    
+                    <h2>Redefinir Senha</h2>
+                    
                     <div className="profile-modal-body-scrollable">
-                        <p style={{ color: 'var(--cor-texto-secundario)', fontSize: '0.9rem', marginTop: 0, lineHeight: '1.5' }}>
-                            Preencha os dados para verificar sua identidade e criar uma nova senha.
-                        </p>
-                        <div className="form-group">
-                            <label htmlFor="username">Matrícula/SIAPE</label>
-                            <input type="text" id="username" required value={formData.username} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="contact">E-mail ou Telefone (cadastrado)</label>
-                            <input type="text" id="contact" required value={formData.contact} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="recovery_code">Código de Recuperação (8 dígitos)</label>
-                            <input type="text" id="recovery_code" required value={formData.recovery_code} onChange={handleChange} disabled={isLoading} maxLength="8" />
+
+                        {/* Etapa 1: Matrícula/SIAPE */}
+                        <div className={`register-step ${step === 1 ? 'active' : ''}`}>
+                            <p className="step-indicator">Etapa 1 de 4: Identificação</p>
+                            <div className="form-group">
+                                <label htmlFor="username">Matrícula/SIAPE</label>
+                                <input type="text" id="username" required value={formData.username} onChange={handleChange} disabled={isLoading} />
+                            </div>
                         </div>
                         
-                        <hr style={{ border: 'none', borderTop: '1px solid var(--cor-input-borda)', margin: '20px 0' }} />
+                        {/* Etapa 2: Contato */}
+                        <div className={`register-step ${step === 2 ? 'active' : ''}`}>
+                            <p className="step-indicator">Etapa 2 de 4: Contato</p>
+                            <div className="form-group">
+                                <label htmlFor="contact">E-mail ou Telefone (cadastrado)</label>
+                                <input type="text" id="contact" required value={formData.contact} onChange={handleChange} disabled={isLoading} />
+                            </div>
+                        </div>
 
-                        <div className="form-group form-group-password">
-                            <label htmlFor="new_password">Nova Senha</label>
-                            <input type="password" id="new_password" required value={formData.new_password} onChange={handleChange} disabled={isLoading} />
-                            <PasswordToggle inputId="new_password" />
+                        {/* Etapa 3: Código de Recuperação */}
+                        <div className={`register-step ${step === 3 ? 'active' : ''}`}>
+                            <p className="step-indicator">Etapa 3 de 4: Verificação</p>
+                            <div className="form-group">
+                                <label htmlFor="recovery_code">Código de Recuperação (8 dígitos)</label>
+                                <input type="text" id="recovery_code" required value={formData.recovery_code} onChange={handleChange} disabled={isLoading} maxLength="8" />
+                            </div>
                         </div>
-                        <div className="form-group form-group-password">
-                            <label htmlFor="confirm_password">Confirmar Nova Senha</label>
-                            <input type="password" id="confirm_password" required value={formData.confirm_password} onChange={handleChange} disabled={isLoading} />
-                            <PasswordToggle inputId="confirm_password" />
+
+                        {/* Etapa 4: Nova Senha */}
+                        <div className={`register-step ${step === 4 ? 'active' : ''}`}>
+                            <p className="step-indicator">Etapa 4 de 4: Nova Senha</p>
+                            <div className="form-group form-group-password">
+                                <label htmlFor="new_password">Nova Senha</label>
+                                <input type="password" id="new_password" required value={formData.new_password} onChange={handleChange} disabled={isLoading} />
+                                <PasswordToggle inputId="new_password" />
+                            </div>
+                            <div className="form-group form-group-password">
+                                <label htmlFor="confirm_password">Confirmar Nova Senha</label>
+                                <input type="password" id="confirm_password" required value={formData.confirm_password} onChange={handleChange} disabled={isLoading} />
+                                <PasswordToggle inputId="confirm_password" />
+                            </div>
                         </div>
+
                     </div>
                     
+                    {/* 4. Footer com botões dinâmicos */}
                     <div className="profile-modal-footer">
-                        <div className="step-nav-buttons">
-                            <button type="button" className="auth-button secondary" onClick={handleClose} disabled={isLoading}>Cancelar</button>
-                            <button type="submit" className="auth-button" disabled={isLoading}>
-                                {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
-                            </button>
-                        </div>
+                        {step === 1 && (
+                            <div className="step-nav-buttons">
+                                <button type="button" className="auth-button secondary" onClick={handleClose} disabled={isLoading}>Cancelar</button>
+                                <button type="button" className="auth-button" onClick={handleStep1to2} disabled={isLoading}>Próximo</button>
+                            </div>
+                        )}
+                        {step === 2 && (
+                            <div className="step-nav-buttons">
+                                <button type="button" className="auth-button secondary" onClick={() => setStep(1)} disabled={isLoading}>Voltar</button>
+                                <button type="button" className="auth-button" onClick={handleStep2to3} disabled={isLoading}>Próximo</button>
+                            </div>
+                        )}
+                        {step === 3 && (
+                            <div className="step-nav-buttons">
+                                <button type="button" className="auth-button secondary" onClick={() => setStep(2)} disabled={isLoading}>Voltar</button>
+                                <button type="button" className="auth-button" onClick={handleStep3to4} disabled={isLoading}>Próximo</button>
+                            </div>
+                        )}
+                        {step === 4 && (
+                            <div className="step-nav-buttons">
+                                <button type="button" className="auth-button secondary" onClick={() => setStep(3)} disabled={isLoading}>Voltar</button>
+                                {/* Este é o único botão que envia o formulário */}
+                                <button type="submit" className="auth-button" disabled={isLoading}>
+                                    {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </form>
-            </div>
+
+                </div>
+            </form>
         </div>
     );
 };
