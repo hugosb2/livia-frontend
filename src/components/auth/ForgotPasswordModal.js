@@ -14,6 +14,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         confirm_password: ''
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isSendingSMS, setIsSendingSMS] = useState(false);
 
     // Limpa o formulário e reseta as etapas ao fechar
     const handleClose = () => {
@@ -50,6 +51,41 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
             return;
         }
         setStep(4);
+    };
+
+    // Função para solicitar envio do código via SMS
+    const handleSendSMS = async () => {
+        if (!formData.username.trim()) {
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha sua Matrícula/SIAPE primeiro.', 'error');
+            return;
+        }
+        
+        if (!formData.contact.trim()) {
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha seu telefone primeiro.', 'error');
+            return;
+        }
+
+        setIsSendingSMS(true);
+
+        try {
+            const response = await apiFetch('/send-recovery-code-sms', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: formData.username,
+                    contact: formData.contact
+                })
+            });
+            
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+
+            onShowMessage('SMS Enviado!', data.message, 'success');
+
+        } catch (error) {
+            onShowMessage('Erro', error.message, 'error');
+        } finally {
+            setIsSendingSMS(false);
+        }
     };
 
     // 3. Função de envio (agora na etapa final)
@@ -126,6 +162,17 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                             <div className="form-group">
                                 <label htmlFor="recovery_code">Código de Recuperação (8 dígitos)</label>
                                 <input type="text" id="recovery_code" required value={formData.recovery_code} onChange={handleChange} disabled={isLoading} maxLength="8" />
+                            </div>
+                            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                                <button 
+                                    type="button" 
+                                    className="auth-button secondary" 
+                                    onClick={handleSendSMS} 
+                                    disabled={isLoading || isSendingSMS}
+                                    style={{ fontSize: '0.9em', padding: '8px 16px' }}
+                                >
+                                    {isSendingSMS ? 'Enviando...' : '📱 Enviar código por SMS'}
+                                </button>
                             </div>
                         </div>
 
