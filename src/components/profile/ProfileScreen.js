@@ -16,6 +16,7 @@ export const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
             </header>
             
             <main className="profile-content">
+                {/* Seção de Informações Pessoais */}
                 <div className="profile-section">
                     <h2>Informações Pessoais</h2>
                     <div className="profile-info-card">
@@ -38,7 +39,7 @@ export const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                     </div>
                 </div>
 
-                {/* === SEÇÃO MODIFICADA/ADICIONADA === */}
+                {/* Seção de Segurança (Simplificada) */}
                 <div className="profile-section">
                     <h2>Segurança</h2>
                     <div className="profile-actions-grid">
@@ -46,18 +47,10 @@ export const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                             <IconPassword />
                             Alterar Senha
                         </button>
-                        <button id="profile-regenerate-code-btn" className="profile-action-btn" onClick={() => onOpenModal('regenerateCode')}>
-                            <IconPassword />
-                            Gerar Novo Código de Recuperação
-                        </button>
                     </div>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--cor-texto-secundario)', marginTop: '16px', lineHeight: '1.5' }}>
-                        O <strong>Código de Recuperação</strong> é usado para redefinir sua senha caso você a esqueça.
-                        Ao gerar um novo código, o antigo será invalidado.
-                    </p>
                 </div>
-                {/* === FIM DA SEÇÃO === */}
 
+                {/* Seção de Ações da Conta */}
                 <div className="profile-section">
                     <h2>Ações da Conta</h2>
                     <div className="profile-actions-grid">
@@ -71,6 +64,8 @@ export const ProfileScreen = ({ user, onBack, onLogout, onOpenModal }) => {
                         </button>
                     </div>
                 </div>
+
+                {/* Rodapé / Sobre */}
                 <div className="profile-section">
                     <h2>Sobre</h2>
                     <p>Este sistema foi desenvolvido no Curso de Sistemas de Informação - Campus Itapetinga. Desenvolvido por Hugo Barros (aluno) sob orientação do Prof. Hudson Barros.</p>
