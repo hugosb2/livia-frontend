@@ -199,7 +199,11 @@ export const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                 }
             }
 
-            onRegisterSuccess(registerData.message, registerData.recovery_code);
+            // === ALTERAÇÃO AQUI ===
+            // Não passamos mais o 'registerData.recovery_code' no segundo parâmetro.
+            // Isso evita que o modal "ShowRecoveryCodeModal" seja aberto.
+            // O usuário verá apenas a mensagem de sucesso do backend (que diz que foi pro email).
+            onRegisterSuccess(registerData.message); 
 
         } catch (err) {
             setError(err.message);
@@ -301,7 +305,6 @@ export const RegisterForm = ({ onShowLogin, onRegisterSuccess }) => {
                             <input type="text" id="reg-username" required value={formData.username} onChange={handleChange} />
                         </div>
                         <div className="step-nav-buttons">
-                            {/* Não permitimos voltar para a etapa de código para não bugar o fluxo, volta para identificação se precisar recomeçar */}
                             <button type="button" className="auth-button secondary" onClick={() => setStep(3)}>Voltar</button>
                             <button type="button" className="auth-button" onClick={handleStep4to5} disabled={isLoading}>
                                 {isLoading ? 'Validando...' : 'Próximo'}
