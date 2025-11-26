@@ -14,7 +14,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         confirm_password: ''
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [isSendingSMS, setIsSendingSMS] = useState(false);
+    const [isSendingCode, setIsSendingCode] = useState(false); // Renomeado de isSendingSMS para ficar mais genérico
 
     // Limpa o formulário e reseta as etapas ao fechar
     const handleClose = () => {
@@ -53,21 +53,22 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         setStep(4);
     };
 
-    // Função para solicitar envio do código via SMS
-    const handleSendSMS = async () => {
+    // Função para solicitar envio do código (AGORA VIA E-MAIL)
+    const handleSendCode = async () => {
         if (!formData.username.trim()) {
             onShowMessage('Campo Obrigatório', 'Por favor, preencha sua Matrícula/SIAPE primeiro.', 'error');
             return;
         }
         
         if (!formData.contact.trim()) {
-            onShowMessage('Campo Obrigatório', 'Por favor, preencha seu telefone primeiro.', 'error');
+            onShowMessage('Campo Obrigatório', 'Por favor, preencha seu telefone ou e-mail primeiro.', 'error');
             return;
         }
 
-        setIsSendingSMS(true);
+        setIsSendingCode(true);
 
         try {
+            // Mantivemos a rota antiga para não quebrar a conexão, mas o backend agora envia email
             const response = await apiFetch('/send-recovery-code-sms', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -79,12 +80,13 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
 
-            onShowMessage('SMS Enviado!', data.message, 'success');
+            // MUDANÇA AQUI: Título da mensagem atualizado
+            onShowMessage('Código Enviado!', data.message, 'success');
 
         } catch (error) {
             onShowMessage('Erro', error.message, 'error');
         } finally {
-            setIsSendingSMS(false);
+            setIsSendingCode(false);
         }
     };
 
@@ -153,6 +155,9 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                             <div className="form-group">
                                 <label htmlFor="contact">E-mail ou Telefone (cadastrado)</label>
                                 <input type="text" id="contact" required value={formData.contact} onChange={handleChange} disabled={isLoading} />
+                                <small style={{display: 'block', marginTop: '5px', color: 'var(--cor-texto-secundario)'}}>
+                                    O código será enviado para o seu <strong>E-mail institucional/pessoal</strong> cadastrado.
+                                </small>
                             </div>
                         </div>
 
@@ -164,14 +169,15 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                                 <input type="text" id="recovery_code" required value={formData.recovery_code} onChange={handleChange} disabled={isLoading} maxLength="8" />
                             </div>
                             <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                                {/* MUDANÇA AQUI: Texto do botão atualizado */}
                                 <button 
                                     type="button" 
                                     className="auth-button secondary" 
-                                    onClick={handleSendSMS} 
-                                    disabled={isLoading || isSendingSMS}
+                                    onClick={handleSendCode} 
+                                    disabled={isLoading || isSendingCode}
                                     style={{ fontSize: '0.9em', padding: '8px 16px' }}
                                 >
-                                    {isSendingSMS ? 'Enviando...' : '📱 Enviar código por SMS'}
+                                    {isSendingCode ? 'Enviando...' : '📧 Enviar código para E-mail cadastrado'}
                                 </button>
                             </div>
                         </div>
