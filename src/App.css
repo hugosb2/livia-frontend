@@ -111,6 +111,8 @@ html {
     height: -webkit-fill-available;
 }
 
+
+
 body {
     font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
@@ -2206,4 +2208,11 @@ html {
     .app-bar-desktop-actions {
         display: none;
     }
+}
+
+/* =================================================================== */
+/* FIX: EMPILHAMENTO DE MODAIS (Z-INDEX SUPREMO)                       */
+/* =================================================================== */
+.modal-overlay.message-overlay {
+    z-index: 100000 !important; /* Garante que fique acima de todos os outros modais (99999) */
 }

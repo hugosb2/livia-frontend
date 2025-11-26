@@ -7,7 +7,7 @@ import './App.css';
 // Auth Components
 import { SplashScreen } from './components/auth/SplashScreen';
 import { AuthScreen } from './components/auth/AuthScreen';
-import { ForgotPasswordModal } from './components/auth/ForgotPasswordModal'; // <-- NOVO
+import { ForgotPasswordModal } from './components/auth/ForgotPasswordModal';
 
 // Chat Components
 import { ChatLayout } from './components/chat/ChatLayout';
@@ -17,11 +17,11 @@ import { ProfileScreen } from './components/profile/ProfileScreen';
 import { EditProfileModal } from './components/profile/EditProfileModal';
 import { ChangePasswordModal } from './components/profile/ChangePasswordModal';
 import { DeleteAccountModal } from './components/profile/DeleteAccountModal';
-import { RegenerateCodeModal } from './components/profile/RegenerateCodeModal'; // <-- NOVO
+import { RegenerateCodeModal } from './components/profile/RegenerateCodeModal';
 
 // UI Components
 import { MessageModal } from './components/ui/MessageModal';
-import { ShowRecoveryCodeModal } from './components/ui/ShowRecoveryCodeModal'; // <-- NOVO
+import { ShowRecoveryCodeModal } from './components/ui/ShowRecoveryCodeModal';
 
 // Utilities
 import {
@@ -40,7 +40,7 @@ function App() {
     const [activeModal, setActiveModal] = useState('none'); 
     const [messageModal, setMessageModal] = useState({ visible: false });
 
-    // NOVO ESTADO E HANDLERS PARA O CÓDIGO DE RECUPERAÇÃO
+    // ESTADO E HANDLERS PARA O CÓDIGO DE RECUPERAÇÃO
     const [recoveryCodeModal, setRecoveryCodeModal] = useState({ visible: false, code: null });
 
     const handleShowNewCode = (code) => {
@@ -49,7 +49,6 @@ function App() {
     const handleCloseRecoveryCodeModal = () => {
         setRecoveryCodeModal({ visible: false, code: null });
     };
-    // FIM DO NOVO ESTADO
 
     useEffect(() => {
         const checkAuth = () => {
@@ -117,8 +116,8 @@ function App() {
                 return <AuthScreen 
                     onLoginSuccess={handleLoginSuccess} 
                     onShowMessage={handleShowMessage}
-                    onOpenModal={handleOpenModal} // <-- MODIFICADO
-                    onShowNewCode={handleShowNewCode} // <-- MODIFICADO
+                    onOpenModal={handleOpenModal}
+                    onShowNewCode={handleShowNewCode}
                 />;
             case 'chat':
                 return <ChatLayout user={user} onLogout={handleLogout} onShowProfile={handleShowProfile} />;
@@ -128,8 +127,8 @@ function App() {
                 return <AuthScreen 
                     onLoginSuccess={handleLoginSuccess} 
                     onShowMessage={handleShowMessage} 
-                    onOpenModal={handleOpenModal} // <-- MODIFICADO
-                    onShowNewCode={handleShowNewCode} // <-- MODIFICADO
+                    onOpenModal={handleOpenModal}
+                    onShowNewCode={handleShowNewCode}
                 />;
         }
     };
@@ -138,22 +137,13 @@ function App() {
         <>
             {renderAppView()}
             
-            <MessageModal
-                isVisible={messageModal.visible}
-                title={messageModal.title}
-                message={messageModal.message}
-                type={messageModal.type}
-                onClose={handleCloseMessageModal}
-            />
-            
-            {/* NOVO MODAL PARA EXIBIR O CÓDIGO */}
+            {/* Outros Modais ficam aqui no meio */}
             <ShowRecoveryCodeModal
                 isVisible={recoveryCodeModal.visible}
                 code={recoveryCodeModal.code}
                 onClose={handleCloseRecoveryCodeModal}
             />
 
-            {/* NOVO MODAL PARA REDEFINIR SENHA */}
             <ForgotPasswordModal
                 isVisible={activeModal === 'forgotPassword'}
                 onClose={handleCloseModal}
@@ -180,7 +170,6 @@ function App() {
                         onShowMessage={handleShowMessage}
                         onLogout={handleLogout}
                     />
-                    {/* NOVO MODAL PARA REGERAR CÓDIGO */}
                     <RegenerateCodeModal
                         isVisible={activeModal === 'regenerateCode'}
                         onClose={handleCloseModal}
@@ -189,6 +178,16 @@ function App() {
                     />
                 </>
             )}
+
+            {/* --- FIX: MESSAGE MODAL MOVIDO PARA O FINAL --- */}
+            {/* Como é o último elemento e tem o z-index CSS maior, cobrirá tudo */}
+            <MessageModal
+                isVisible={messageModal.visible}
+                title={messageModal.title}
+                message={messageModal.message}
+                type={messageModal.type}
+                onClose={handleCloseMessageModal}
+            />
         </>
     );
 }
