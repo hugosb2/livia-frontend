@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { apiFetch } from '../../utils/authHelpers';
+// IMPORTANTE: Adicionei o formatPhone na importação abaixo
+import { apiFetch, formatPhone } from '../../utils/authHelpers';
 import { PasswordToggle } from '../ui/PasswordToggle';
 
 export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
@@ -14,18 +15,36 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         confirm_password: ''
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [isSendingCode, setIsSendingCode] = useState(false); // Renomeado de isSendingSMS para ficar mais genérico
+    const [isSendingCode, setIsSendingCode] = useState(false); 
 
     // Limpa o formulário e reseta as etapas ao fechar
     const handleClose = () => {
         setFormData({ username: '', contact: '', recovery_code: '', new_password: '', confirm_password: '' });
         setIsLoading(false);
-        setStep(1); // Reseta para a etapa 1
+        setStep(1); 
         onClose();
     };
 
+    // === MUDANÇA AQUI: Lógica Híbrida para E-mail ou Telefone ===
     const handleChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+        const { id, value } = e.target;
+
+        if (id === 'contact') {
+            // Verifica se o input parece um número de telefone (começa com dígito ou parêntese)
+            // Se começar com letra, tratamos como e-mail e não aplicamos máscara.
+            const isPhoneInput = /^[\d(]/.test(value);
+
+            if (isPhoneInput) {
+                // Aplica a máscara de telefone importada
+                setFormData(prev => ({ ...prev, [id]: formatPhone(value) }));
+            } else {
+                // Mantém o texto original (provável e-mail)
+                setFormData(prev => ({ ...prev, [id]: value }));
+            }
+        } else {
+            // Outros campos normais
+            setFormData(prev => ({ ...prev, [id]: value }));
+        }
     };
 
     // 2. Funções de navegação entre etapas
@@ -53,7 +72,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         setStep(4);
     };
 
-    // Função para solicitar envio do código (AGORA VIA E-MAIL)
+    // Função para solicitar envio do código
     const handleSendCode = async () => {
         if (!formData.username.trim()) {
             onShowMessage('Campo Obrigatório', 'Por favor, preencha sua Matrícula/SIAPE primeiro.', 'error');
@@ -68,7 +87,6 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
         setIsSendingCode(true);
 
         try {
-            // Mantivemos a rota antiga para não quebrar a conexão, mas o backend agora envia email
             const response = await apiFetch('/send-recovery-code-sms', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -80,7 +98,6 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
 
-            // MUDANÇA AQUI: Título da mensagem atualizado
             onShowMessage('Código Enviado!', data.message, 'success');
 
         } catch (error) {
@@ -121,7 +138,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
             if (!response.ok) throw new Error(data.message);
 
             onShowMessage('Sucesso!', data.message, 'success');
-            handleClose(); // Fecha e reseta o modal
+            handleClose(); 
 
         } catch (error) {
             onShowMessage('Erro', error.message, 'error');
@@ -132,7 +149,6 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 
     return (
         <div className={`modal-overlay ${isVisible ? 'visible' : ''}`} onClick={handleClose}>
-            {/* O onSubmit agora está no <form> e será acionado pelo botão type="submit" na etapa 4 */}
             <form id="forgot-password-form" onSubmit={handleSubmit} style={{ margin: 0, padding: 0, width: '100%', display: 'contents' }}>
                 <div className="modal-card profile-modal-card" onClick={(e) => e.stopPropagation()}>
                     
@@ -149,12 +165,20 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                             </div>
                         </div>
                         
-                        {/* Etapa 2: Contato */}
+                        {/* Etapa 2: Contato (COM MÁSCARA HÍBRIDA) */}
                         <div className={`register-step ${step === 2 ? 'active' : ''}`}>
                             <p className="step-indicator">Etapa 2 de 4: Contato</p>
                             <div className="form-group">
                                 <label htmlFor="contact">E-mail ou Telefone (cadastrado)</label>
-                                <input type="text" id="contact" required value={formData.contact} onChange={handleChange} disabled={isLoading} />
+                                <input 
+                                    type="text" // Mantido text para aceitar email
+                                    id="contact" 
+                                    required 
+                                    value={formData.contact} 
+                                    onChange={handleChange} 
+                                    disabled={isLoading}
+                                    placeholder="Ex: joao@email.com ou (77) 9..."
+                                />
                                 <small style={{display: 'block', marginTop: '5px', color: 'var(--cor-texto-secundario)'}}>
                                     O código será enviado para o seu <strong>E-mail institucional/pessoal</strong> cadastrado.
                                 </small>
@@ -169,7 +193,6 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                                 <input type="text" id="recovery_code" required value={formData.recovery_code} onChange={handleChange} disabled={isLoading} maxLength="8" />
                             </div>
                             <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                                {/* MUDANÇA AQUI: Texto do botão atualizado */}
                                 <button 
                                     type="button" 
                                     className="auth-button secondary" 
@@ -199,7 +222,7 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
 
                     </div>
                     
-                    {/* 4. Footer com botões dinâmicos */}
+                    {/* Footer com botões dinâmicos */}
                     <div className="profile-modal-footer">
                         {step === 1 && (
                             <div className="step-nav-buttons">
@@ -222,7 +245,6 @@ export const ForgotPasswordModal = ({ isVisible, onClose, onShowMessage }) => {
                         {step === 4 && (
                             <div className="step-nav-buttons">
                                 <button type="button" className="auth-button secondary" onClick={() => setStep(3)} disabled={isLoading}>Voltar</button>
-                                {/* Este é o único botão que envia o formulário */}
                                 <button type="submit" className="auth-button" disabled={isLoading}>
                                     {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
                                 </button>
